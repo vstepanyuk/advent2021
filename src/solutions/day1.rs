@@ -28,8 +28,10 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<()> {
-        let nums = helpers::parse_lines::<u32>(input);
-        let sums: Vec<u32> = nums.windows(3).map(|w| w.iter().sum()).collect();
+        let sums: Vec<u32> = helpers::parse_lines::<u32>(input)
+            .windows(3)
+            .map(|w| w.iter().sum())
+            .collect();
 
         println!("{}", self.solve(&sums));
 
