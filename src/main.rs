@@ -5,18 +5,11 @@ use solutions::*;
 mod solutions;
 
 macro_rules! solutions {
-    ($( $mod_name:ident ), *) => {{
-            let temp_vec: Vec<Box<dyn Solution>> = vec![
-            $(
-                Box::new($mod_name::DaySolution::new()),
-            )*
-            ];
-            temp_vec
-    }};
+    ($( $mod_name:ident ), *) => { vec![$( Box::new($mod_name::DaySolution::new()),)*] };
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut solutions = solutions!(
+    let mut solutions: Vec<Box<dyn Solution>> = solutions!(
         day1, day2, day3, day4, day5, day6, day7, day8, day9, day10, day11, day12, day13, day14,
         day15, day16, day17, day18, day19, day20, day21, day22, day23, day24, day25
     );
