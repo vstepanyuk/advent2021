@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use crate::solutions::Solution;
+use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -10,11 +8,11 @@ impl Solution for DaySolution {
         Self {}
     }
 
-    fn part_1(&mut self, _input: Option<String>) -> Result<(), Box<dyn Error>> {
+    fn part_1(&mut self, _input: Option<String>) -> Result<()> {
         todo!()
     }
 
-    fn part_2(&mut self, _input: Option<String>) -> Result<(), Box<dyn Error>> {
+    fn part_2(&mut self, _input: Option<String>) -> Result<()> {
         todo!()
     }
 }
