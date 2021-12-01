@@ -29,11 +29,6 @@ pub trait Solution {
     where
         Self: Sized;
 
-    fn part_1(&mut self, _input: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-        todo!()
-    }
-
-    fn part_2(&mut self, _input: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-        todo!()
-    }
+    fn part_1(&mut self, _input: Option<String>) -> Result<(), Box<dyn std::error::Error>>;
+    fn part_2(&mut self, _input: Option<String>) -> Result<(), Box<dyn std::error::Error>>;
 }

@@ -2,6 +2,7 @@ use clap::{App, AppSettings, Arg, SubCommand};
 
 use solutions::*;
 
+mod helpers;
 mod solutions;
 
 macro_rules! solutions {
