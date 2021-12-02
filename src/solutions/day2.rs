@@ -15,7 +15,7 @@ enum Step {
 impl FromStr for Step {
     type Err = String;
 
-    fn from_str(s: &str) -> std::prelude::rust_2015::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         let (dir, value) = s.split_once(' ').ok_or("Wrong step")?;
         let value = value.parse::<i32>().map_err(|err| err.to_string())?;
 
