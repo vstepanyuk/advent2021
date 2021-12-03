@@ -92,11 +92,6 @@ impl Solution for DaySolution {
         let co2 = isize::from_str_radix(co2.first().unwrap(), 2).unwrap();
 
         println!("{}", oxygen * co2);
-
-        let mut a = vec![0, 1, 2, 3];
-        self.retain_at_least_one(&mut a, |&a| a < 0);
-        println!("{:?}", a);
-
         Ok(())
     }
 }
