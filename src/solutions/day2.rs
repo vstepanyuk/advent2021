@@ -16,7 +16,7 @@ impl FromStr for Step {
     type Err = String;
 
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
-        let (dir, value) = s.split_once(' ').ok_or("Wrong step")?;
+        let (dir, value) = s.split_once(' ').ok_or("wrong step")?;
         let value = value.parse::<i32>().map_err(|err| err.to_string())?;
 
         Ok(match dir {
@@ -75,3 +75,7 @@ impl Solution for DaySolution {
         Ok(())
     }
 }
+
+// Bash solution
+// echo "Part 1: $(cat input.txt | sed -r 's/forward (.*)/\1 0/g' | sed -r 's/down /0 /g' | sed -r 's/up /0 -/g' | awk '{ h += $1; d += $2 } END { print d * h; }')"
+// echo "Part 2: $(cat input.txt | sed -r 's/forward (.*)/\1 \1 0 1/g' | sed -r 's/down (.*)/0 0 \1 0/g' | sed -r 's/up (.*)/0 0 -\1 0/g' | awk '{ h += $1; a +=$3; d += $2 * a * $4} END { print d * h}')"
