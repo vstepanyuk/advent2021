@@ -4,13 +4,28 @@ use crate::solutions::{Result, Solution};
 pub struct DaySolution;
 
 impl DaySolution {
-    fn bits<'a>(&self, input: &[String], at: usize) -> (i32, i32) {
+    fn count_bits<'a>(&self, input: &[String], at: usize) -> (i32, i32) {
         input.iter().fold((0, 0), |bits, line| {
-            let bytes = line.as_bytes();
-            let bit0 = (bytes[at] == b'0') as i32;
-            let bit1 = (bytes[at] == b'1') as i32;
+            let bit_set = (line.as_bytes()[at] == b'1') as i32;
 
-            (bits.0 + bit0, bits.1 + bit1)
+            (bits.0 + 1 - bit_set, bits.1 + bit_set)
+        })
+    }
+
+    fn retain<T, F>(&self, arr: &mut Vec<T>, mut func: F)
+    where
+        F: FnMut(&T) -> bool,
+    {
+        let mut count = arr.len();
+        arr.retain(|elem| {
+            let is_deleted = func(elem);
+            count -= is_deleted as usize;
+
+            if count == 0 {
+                return true;
+            }
+
+            is_deleted
         })
     }
 }
@@ -27,12 +42,12 @@ impl Solution for DaySolution {
             .map(String::from)
             .collect();
 
-        let len = lines.first().map(|s| s.len()).unwrap_or_default();
+        let len = lines.first().map(String::len).unwrap_or(0);
         let mut gamma = 0;
         let mut epsilon = 0;
 
         for i in 0..len {
-            let bits = self.bits(&lines, i);
+            let bits = self.count_bits(&lines, i);
             let bit = (bits.1 > bits.0) as i32;
 
             gamma |= bit << (len - i - 1);
@@ -50,50 +65,28 @@ impl Solution for DaySolution {
             .map(String::from)
             .collect();
 
-        let len = lines.first().map(|s| s.len()).unwrap_or_default();
+        let len = lines.first().map(String::len).unwrap_or(0);
 
         let mut oxygen = lines.clone();
         let mut co2 = lines.clone();
 
         for i in 0..len {
-            let bits = self.bits(&oxygen, i);
-
             if oxygen.len() > 1 {
-                let remove = oxygen
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(index, line)| {
-                        let chars = line.as_bytes();
-                        match chars[i] {
-                            b'0' if bits.0 < bits.1 || bits.0 == bits.1 => Some(index),
-                            b'1' if bits.0 > bits.1 => Some(index),
-                            _ => None,
-                        }
-                    })
-                    .collect::<Vec<usize>>();
+                let bits = self.count_bits(&oxygen, i);
 
-                remove.iter().rev().for_each(|i| {
-                    oxygen.remove(*i);
+                self.retain(&mut oxygen, |line| match line.as_bytes()[i] {
+                    b'0' if bits.0 < bits.1 || bits.0 == bits.1 => false,
+                    b'1' if bits.0 > bits.1 => false,
+                    _ => true,
                 });
             }
 
-            let bits = self.bits(&co2, i);
             if co2.len() > 1 {
-                let remove = co2
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(index, line)| {
-                        let chars = line.as_bytes();
-                        match chars[i] {
-                            b'0' if bits.0 > bits.1 => Some(index),
-                            b'1' if bits.0 < bits.1 || bits.0 == bits.1 => Some(index),
-                            _ => None,
-                        }
-                    })
-                    .collect::<Vec<usize>>();
-
-                remove.iter().rev().for_each(|i| {
-                    co2.remove(*i);
+                let bits = self.count_bits(&co2, i);
+                self.retain(&mut co2, |line| match line.as_bytes()[i] {
+                    b'0' if bits.0 > bits.1 => false,
+                    b'1' if bits.0 < bits.1 || bits.0 == bits.1 => false,
+                    _ => true,
                 });
             }
         }
