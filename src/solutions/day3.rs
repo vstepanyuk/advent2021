@@ -6,7 +6,7 @@ use crate::solutions::{Result, Solution};
 pub struct DaySolution;
 
 impl DaySolution {
-    fn count_bits<'a>(&self, input: &[String], at: usize) -> (i32, i32) {
+    fn count_bits(&self, input: &[String], at: usize) -> (i32, i32) {
         input.iter().fold((0, 0), |bits, line| {
             let bit_set = (line.as_bytes()[at] == b'1') as i32;
 
@@ -27,7 +27,11 @@ impl DaySolution {
             let is_deleted = func(elem);
             count -= !is_deleted as usize;
 
-            return if count == 0 { true } else { is_deleted };
+            if count == 0 {
+                true
+            } else {
+                is_deleted
+            }
         })
     }
 }
@@ -70,12 +74,12 @@ impl Solution for DaySolution {
         let len = lines.first().map(String::len).unwrap_or(0);
 
         let mut oxygen = lines.clone();
-        let mut co2 = lines.clone();
+        let mut co2 = lines;
 
         for i in 0..len {
             let bits = self.count_bits(&oxygen, i);
             self.retain_at_least_one(&mut oxygen, |line| match line.as_bytes()[i] {
-                b'0' if bits.0 < bits.1 || bits.0 == bits.1 => false,
+                b'0' if bits.0 <= bits.1 => false,
                 b'1' if bits.0 > bits.1 => false,
                 _ => true,
             });
@@ -83,7 +87,7 @@ impl Solution for DaySolution {
             let bits = self.count_bits(&co2, i);
             self.retain_at_least_one(&mut co2, |line| match line.as_bytes()[i] {
                 b'0' if bits.0 > bits.1 => false,
-                b'1' if bits.0 < bits.1 || bits.0 == bits.1 => false,
+                b'1' if bits.0 <= bits.1 => false,
                 _ => true,
             });
         }
