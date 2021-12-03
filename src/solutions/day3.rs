@@ -89,11 +89,10 @@ impl Solution for DaySolution {
         for i in 0..len {
             let bits = self.count_bits(&oxygen, i);
             self.retain_at_least_one(&mut oxygen, |line| {
-                (line.bit_is_set(i) || bits.0 > bits.1) && (!line.bit_is_set(i) || bits.0 <= bits.1)
+                (!line.bit_is_set(i) || bits.0 <= bits.1) && (line.bit_is_set(i) || bits.0 > bits.1)
             });
 
             let bits = self.count_bits(&co2, i);
-
             self.retain_at_least_one(&mut co2, |line| {
                 (line.bit_is_set(i) || bits.0 <= bits.1) && (!line.bit_is_set(i) || bits.0 > bits.1)
             });
