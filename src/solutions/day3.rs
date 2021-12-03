@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
@@ -19,7 +20,6 @@ impl DaySolution {
     fn count_bits(&self, input: &[String], at: usize) -> (i32, i32) {
         input.iter().fold((0, 0), |bits, line| {
             let bit = line.bit_is_set(at) as i32;
-
             (bits.0 + 1 - bit, bits.1 + bit)
         })
     }
@@ -47,12 +47,7 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<()> {
-        let lines: Vec<String> = input
-            .unwrap_or_default()
-            .lines()
-            .map(String::from)
-            .collect();
-
+        let lines = parse_lines(input);
         let len = lines.first().map(String::len).unwrap_or(0);
         let mut gamma = 0;
         let mut epsilon = 0;
@@ -70,14 +65,8 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<()> {
-        let lines: Vec<String> = input
-            .unwrap_or_default()
-            .lines()
-            .map(String::from)
-            .collect();
-
+        let lines = parse_lines(input);
         let len = lines.first().map(String::len).unwrap_or(0);
-
         let mut oxygen = lines.clone();
         let mut co2 = lines;
 
@@ -93,8 +82,15 @@ impl Solution for DaySolution {
             });
         }
 
-        let oxygen = isize::from_str_radix(oxygen.first().unwrap(), 2).unwrap();
-        let co2 = isize::from_str_radix(co2.first().unwrap(), 2).unwrap();
+        let oxygen = oxygen
+            .first()
+            .map(|s| isize::from_str_radix(s, 2).unwrap_or(0))
+            .unwrap_or(0);
+
+        let co2 = co2
+            .first()
+            .map(|s| isize::from_str_radix(s, 2).unwrap_or(0))
+            .unwrap_or(0);
 
         println!("{}", oxygen * co2);
         Ok(())
