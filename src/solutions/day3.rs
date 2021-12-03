@@ -36,12 +36,7 @@ impl DaySolution {
         arr.retain(|elem| {
             let is_deleted = func(elem);
             count -= !is_deleted as usize;
-
-            if count == 0 {
-                true
-            } else {
-                is_deleted
-            }
+            count == 0 || is_deleted
         })
     }
 }
