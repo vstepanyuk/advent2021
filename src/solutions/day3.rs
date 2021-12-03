@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
 
@@ -24,7 +22,7 @@ impl DaySolution {
         })
     }
 
-    fn retain_at_least_one<T: Debug, F>(&self, arr: &mut Vec<T>, mut func: F)
+    fn retain_at_least_one<T, F>(&self, arr: &mut Vec<T>, mut func: F)
     where
         F: FnMut(&T) -> bool,
     {
