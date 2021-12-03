@@ -5,12 +5,22 @@ use crate::solutions::{Result, Solution};
 #[derive(Default)]
 pub struct DaySolution;
 
+trait BitString {
+    fn bit_is_set(&self, at: usize) -> bool;
+}
+
+impl BitString for String {
+    fn bit_is_set(&self, at: usize) -> bool {
+        self.as_bytes()[at] == b'1'
+    }
+}
+
 impl DaySolution {
     fn count_bits(&self, input: &[String], at: usize) -> (i32, i32) {
         input.iter().fold((0, 0), |bits, line| {
-            let bit_set = (line.as_bytes()[at] == b'1') as i32;
+            let bit = line.bit_is_set(at) as i32;
 
-            (bits.0 + 1 - bit_set, bits.1 + bit_set)
+            (bits.0 + 1 - bit, bits.1 + bit)
         })
     }
 
@@ -78,17 +88,14 @@ impl Solution for DaySolution {
 
         for i in 0..len {
             let bits = self.count_bits(&oxygen, i);
-            self.retain_at_least_one(&mut oxygen, |line| match line.as_bytes()[i] {
-                b'0' if bits.0 <= bits.1 => false,
-                b'1' if bits.0 > bits.1 => false,
-                _ => true,
+            self.retain_at_least_one(&mut oxygen, |line| {
+                (line.bit_is_set(i) || bits.0 > bits.1) && (!line.bit_is_set(i) || bits.0 <= bits.1)
             });
 
             let bits = self.count_bits(&co2, i);
-            self.retain_at_least_one(&mut co2, |line| match line.as_bytes()[i] {
-                b'0' if bits.0 > bits.1 => false,
-                b'1' if bits.0 <= bits.1 => false,
-                _ => true,
+
+            self.retain_at_least_one(&mut co2, |line| {
+                (line.bit_is_set(i) || bits.0 <= bits.1) && (!line.bit_is_set(i) || bits.0 > bits.1)
             });
         }
 
