@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
@@ -12,20 +14,20 @@ impl DaySolution {
         })
     }
 
-    fn retain<T, F>(&self, arr: &mut Vec<T>, mut func: F)
+    fn retain_at_least_one<T: Debug, F>(&self, arr: &mut Vec<T>, mut func: F)
     where
         F: FnMut(&T) -> bool,
     {
         let mut count = arr.len();
+        if count == 1 {
+            return;
+        }
+
         arr.retain(|elem| {
             let is_deleted = func(elem);
-            count -= is_deleted as usize;
+            count -= !is_deleted as usize;
 
-            if count == 0 {
-                return true;
-            }
-
-            is_deleted
+            return if count == 0 { true } else { is_deleted };
         })
     }
 }
@@ -71,30 +73,29 @@ impl Solution for DaySolution {
         let mut co2 = lines.clone();
 
         for i in 0..len {
-            if oxygen.len() > 1 {
-                let bits = self.count_bits(&oxygen, i);
+            let bits = self.count_bits(&oxygen, i);
+            self.retain_at_least_one(&mut oxygen, |line| match line.as_bytes()[i] {
+                b'0' if bits.0 < bits.1 || bits.0 == bits.1 => false,
+                b'1' if bits.0 > bits.1 => false,
+                _ => true,
+            });
 
-                self.retain(&mut oxygen, |line| match line.as_bytes()[i] {
-                    b'0' if bits.0 < bits.1 || bits.0 == bits.1 => false,
-                    b'1' if bits.0 > bits.1 => false,
-                    _ => true,
-                });
-            }
-
-            if co2.len() > 1 {
-                let bits = self.count_bits(&co2, i);
-                self.retain(&mut co2, |line| match line.as_bytes()[i] {
-                    b'0' if bits.0 > bits.1 => false,
-                    b'1' if bits.0 < bits.1 || bits.0 == bits.1 => false,
-                    _ => true,
-                });
-            }
+            let bits = self.count_bits(&co2, i);
+            self.retain_at_least_one(&mut co2, |line| match line.as_bytes()[i] {
+                b'0' if bits.0 > bits.1 => false,
+                b'1' if bits.0 < bits.1 || bits.0 == bits.1 => false,
+                _ => true,
+            });
         }
 
         let oxygen = isize::from_str_radix(oxygen.first().unwrap(), 2).unwrap();
         let co2 = isize::from_str_radix(co2.first().unwrap(), 2).unwrap();
 
         println!("{}", oxygen * co2);
+
+        let mut a = vec![0, 1, 2, 3];
+        self.retain_at_least_one(&mut a, |&a| a < 0);
+        println!("{:?}", a);
 
         Ok(())
     }
