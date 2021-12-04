@@ -1,5 +1,6 @@
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
+use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -73,7 +74,7 @@ impl Solution for DaySolution {
         Self {}
     }
 
-    fn part_1(&mut self, input: Option<String>) -> Result<()> {
+    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines(input);
         let (nums, mut boards) = self.parse(lines);
 
@@ -101,10 +102,10 @@ impl Solution for DaySolution {
 
         println!("{:?}", sum * num as u32);
 
-        Ok(())
+        Ok(Box::new(sum * num as u32))
     }
 
-    fn part_2(&mut self, input: Option<String>) -> Result<()> {
+    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines(input);
         let (nums, mut boards) = self.parse(lines);
 
@@ -134,6 +135,6 @@ impl Solution for DaySolution {
 
         println!("{:?}", sum * (*num as u32));
 
-        Ok(())
+        Ok(Box::new(sum * (*num as u32)))
     }
 }

@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub mod day1;
 pub mod day10;
 pub mod day11;
@@ -31,6 +33,6 @@ pub trait Solution {
     where
         Self: Sized;
 
-    fn part_1(&mut self, _input: Option<String>) -> Result<()>;
-    fn part_2(&mut self, _input: Option<String>) -> Result<()>;
+    fn part_1(&mut self, _input: Option<String>) -> Result<Box<dyn Display>>;
+    fn part_2(&mut self, _input: Option<String>) -> Result<Box<dyn Display>>;
 }

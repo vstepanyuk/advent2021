@@ -1,5 +1,6 @@
 use crate::helpers;
 use crate::solutions::{Result, Solution};
+use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -20,14 +21,14 @@ impl Solution for DaySolution {
         Self {}
     }
 
-    fn part_1(&mut self, input: Option<String>) -> Result<()> {
+    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let nums = helpers::parse_lines::<u32>(input);
         println!("{}", self.solve(&nums));
 
-        Ok(())
+        Ok(Box::new(self.solve(&nums)))
     }
 
-    fn part_2(&mut self, input: Option<String>) -> Result<()> {
+    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let sums: Vec<u32> = helpers::parse_lines::<u32>(input)
             .windows(3)
             .map(|w| w.iter().sum())
@@ -35,6 +36,6 @@ impl Solution for DaySolution {
 
         println!("{}", self.solve(&sums));
 
-        Ok(())
+        Ok(Box::new(self.solve(&sums)))
     }
 }

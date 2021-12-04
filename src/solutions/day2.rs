@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::helpers::parse_lines;
@@ -33,7 +34,7 @@ impl Solution for DaySolution {
         Self {}
     }
 
-    fn part_1(&mut self, input: Option<String>) -> Result<()> {
+    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let steps: Vec<Step> = parse_lines(input);
 
         let mut horizontal: i32 = 0;
@@ -49,10 +50,10 @@ impl Solution for DaySolution {
 
         println!("{}", horizontal * depth);
 
-        Ok(())
+        Ok(Box::new(horizontal * depth))
     }
 
-    fn part_2(&mut self, input: Option<String>) -> Result<()> {
+    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let steps: Vec<Step> = parse_lines(input);
 
         let mut horizontal: i32 = 0;
@@ -72,7 +73,7 @@ impl Solution for DaySolution {
 
         println!("{}", horizontal * depth);
 
-        Ok(())
+        Ok(Box::new(horizontal * depth))
     }
 }
 

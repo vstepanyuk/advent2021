@@ -1,5 +1,6 @@
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
+use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -44,7 +45,7 @@ impl Solution for DaySolution {
         Self {}
     }
 
-    fn part_1(&mut self, input: Option<String>) -> Result<()> {
+    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines(input);
         let len = lines.first().map(String::len).unwrap_or(0);
         let mut gamma = 0;
@@ -59,10 +60,10 @@ impl Solution for DaySolution {
         }
 
         println!("{}", gamma * epsilon);
-        Ok(())
+        Ok(Box::new(gamma * epsilon))
     }
 
-    fn part_2(&mut self, input: Option<String>) -> Result<()> {
+    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines(input);
         let len = lines.first().map(String::len).unwrap_or(0);
         let mut oxygen = lines.clone();
@@ -91,6 +92,6 @@ impl Solution for DaySolution {
             .unwrap_or(0);
 
         println!("{}", oxygen * co2);
-        Ok(())
+        Ok(Box::new(oxygen * co2))
     }
 }
