@@ -100,8 +100,6 @@ impl Solution for DaySolution {
             .map(|num| num.0 as u32)
             .sum::<u32>();
 
-        println!("{:?}", sum * num as u32);
-
         Ok(Box::new(sum * num as u32))
     }
 
@@ -132,8 +130,6 @@ impl Solution for DaySolution {
             .filter(|num| !num.1)
             .map(|num| num.0 as u32)
             .sum();
-
-        println!("{:?}", sum * (*num as u32));
 
         Ok(Box::new(sum * (*num as u32)))
     }

@@ -23,7 +23,6 @@ impl Solution for DaySolution {
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let nums = helpers::parse_lines::<u32>(input);
-        println!("{}", self.solve(&nums));
 
         Ok(Box::new(self.solve(&nums)))
     }
@@ -33,8 +32,6 @@ impl Solution for DaySolution {
             .windows(3)
             .map(|w| w.iter().sum())
             .collect();
-
-        println!("{}", self.solve(&sums));
 
         Ok(Box::new(self.solve(&sums)))
     }

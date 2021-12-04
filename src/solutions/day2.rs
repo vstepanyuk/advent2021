@@ -48,8 +48,6 @@ impl Solution for DaySolution {
             }
         }
 
-        println!("{}", horizontal * depth);
-
         Ok(Box::new(horizontal * depth))
     }
 
@@ -70,8 +68,6 @@ impl Solution for DaySolution {
                 Step::Up(value) => aim -= value,
             }
         }
-
-        println!("{}", horizontal * depth);
 
         Ok(Box::new(horizontal * depth))
     }

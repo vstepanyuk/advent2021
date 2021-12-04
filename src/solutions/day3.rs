@@ -59,7 +59,6 @@ impl Solution for DaySolution {
             epsilon |= (1 - bit) << (len - i - 1);
         }
 
-        println!("{}", gamma * epsilon);
         Ok(Box::new(gamma * epsilon))
     }
 
@@ -91,7 +90,6 @@ impl Solution for DaySolution {
             .map(|s| isize::from_str_radix(s, 2).unwrap_or(0))
             .unwrap_or(0);
 
-        println!("{}", oxygen * co2);
         Ok(Box::new(oxygen * co2))
     }
 }

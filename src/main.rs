@@ -47,6 +47,7 @@ fn main() -> Result<()> {
         )
         .subcommand(SubCommand::with_name("part1").about("Get 1st solution"))
         .subcommand(SubCommand::with_name("part2").about("Get 2nd solution"))
+        .subcommand(SubCommand::with_name("all").about("Get all solutions"))
         .settings(&[AppSettings::SubcommandRequired])
         .get_matches();
 
@@ -61,11 +62,20 @@ fn main() -> Result<()> {
         (_, _) => None,
     };
 
-    match matches.subcommand_name() {
-        Some("part1") => solution.part_1(input_value),
-        Some("part2") => solution.part_2(input_value),
-        _ => unreachable!(),
-    }?;
+    let mut results: Vec<String> = vec![];
+
+    let subcommand = matches.subcommand_name().unwrap_or_default();
+    if subcommand == "all" || subcommand == "part1" {
+        let result = solution.part_1(input_value.clone())?;
+        results.push(format!("Part #1: {}", result));
+    }
+
+    if subcommand == "all" || subcommand == "part2" {
+        let result = solution.part_2(input_value)?;
+        results.push(format!("Part #2: {}", result));
+    }
+
+    results.iter().for_each(|result| println!("{}", result));
 
     Ok(())
 }
