@@ -4,9 +4,39 @@ use crate::solutions::{Result, Solution};
 #[derive(Default)]
 pub struct DaySolution;
 
-#[derive(Debug, Default, Copy, Clone)]
-struct BoardValue(u8, bool);
-type Board = Vec<BoardValue>;
+#[derive(Debug, Default, Clone)]
+struct BoardNum(u8, bool);
+type Board = Vec<BoardNum>;
+
+trait Playable {
+    fn play(&mut self, value: u8);
+    fn is_winning(&self) -> bool;
+}
+
+impl Playable for Board {
+    fn play(&mut self, value: u8) {
+        for item in self.iter_mut() {
+            if value == item.0 {
+                item.1 = true;
+                break;
+            }
+        }
+    }
+
+    fn is_winning(&self) -> bool {
+        for y in 0..5 {
+            if (0..5).filter(|&x| self[x + y * 5].1).count() == 5 {
+                return true;
+            }
+
+            if (0..5).filter(|&x| self[y + x * 5].1).count() == 5 {
+                return true;
+            }
+        }
+
+        false
+    }
+}
 
 impl DaySolution {
     fn parse(&self, lines: Vec<String>) -> (Vec<u8>, Vec<Board>) {
@@ -38,37 +68,13 @@ impl DaySolution {
             let row_nums = line
                 .split(' ')
                 .flat_map(|s| s.parse::<u8>().ok())
-                .map(|v| BoardValue(v, false))
-                .collect::<Vec<BoardValue>>();
+                .map(|v| BoardNum(v, false))
+                .collect::<Vec<BoardNum>>();
 
             board.extend(row_nums)
         }
 
         (nums, boards)
-    }
-
-    fn play_board(&self, value: u8, board: &mut Board) {
-        for item in board.iter_mut() {
-            if value == item.0 {
-                item.1 = true;
-                break;
-            }
-        }
-    }
-
-    fn check_board(&self, board: &Board) -> bool {
-        // rows
-        for y in 0..5 {
-            if (0..5).filter(|&x| board[x + y * 5].1).count() == 5 {
-                return true;
-            }
-
-            if (0..5).filter(|&x| board[y + x * 5].1).count() == 5 {
-                return true;
-            }
-        }
-
-        false
     }
 }
 
@@ -83,22 +89,26 @@ impl Solution for DaySolution {
 
         let mut winner: Option<(Board, u8)> = None;
 
-        'outer: for num in nums {
+        for num in nums {
             for board in boards.iter_mut() {
-                self.play_board(num, board);
+                board.play(num);
 
-                if self.check_board(board) {
+                if board.is_winning() {
                     winner = Some((board.to_vec(), num));
-                    break 'outer;
+                    break;
                 }
+            }
+
+            if winner.is_some() {
+                break;
             }
         }
 
         let (winner, num) = winner.unwrap();
         let sum = winner
             .into_iter()
-            .filter(|&v| !v.1)
-            .map(|v| v.0 as u32)
+            .filter(|num| !num.1)
+            .map(|num| num.0 as u32)
             .sum::<u32>();
 
         println!("{:?}", sum * num as u32);
@@ -114,25 +124,29 @@ impl Solution for DaySolution {
         let mut winners_idx = vec![];
 
         let total_boards = boards.len();
-        'outer: for num in nums {
+        for num in nums {
             for (index, board) in boards.iter_mut().enumerate() {
-                self.play_board(num, board);
+                board.play(num);
 
-                if self.check_board(board) && !winners_idx.contains(&index) {
+                if board.is_winning() && !winners_idx.contains(&index) {
                     winners_idx.push(index);
                     winners.push((board.to_vec(), num));
-
-                    if winners.len() == total_boards {
-                        break 'outer;
-                    }
                 }
+            }
+
+            if winners.len() == total_boards {
+                break;
             }
         }
 
         let (winner, num) = winners.last().unwrap();
-        let s1: u32 = winner.iter().filter(|v| !v.1).map(|v| v.0 as u32).sum();
+        let sum: u32 = winner
+            .into_iter()
+            .filter(|num| !num.1)
+            .map(|num| num.0 as u32)
+            .sum();
 
-        println!("{:?}", s1 * (*num as u32));
+        println!("{:?}", sum * (*num as u32));
 
         Ok(())
     }
