@@ -135,7 +135,7 @@ impl Solution for DaySolution {
 
         let (winner, num) = winners.last().unwrap();
         let sum: u32 = winner
-            .into_iter()
+            .iter()
             .filter(|num| !num.1)
             .map(|num| num.0 as u32)
             .sum();
