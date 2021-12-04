@@ -47,19 +47,10 @@ impl DaySolution {
             .collect();
 
         let mut board = Board::default();
-        let mut iter = lines.iter().skip(2);
-        loop {
-            let line = match iter.next() {
-                Some(line) => line,
-                None => {
-                    boards.push(board.clone());
-                    break;
-                }
-            };
-
-            if line.is_empty() && !board.is_empty() {
+        for line in lines.iter().skip(2) {
+            if line.is_empty() {
                 boards.push(board.clone());
-                board = vec![];
+                board.clear();
                 continue;
             }
 
@@ -71,6 +62,7 @@ impl DaySolution {
 
             board.extend(row_nums)
         }
+        boards.push(board);
 
         (nums, boards)
     }
