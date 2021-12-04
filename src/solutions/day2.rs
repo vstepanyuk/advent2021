@@ -73,6 +73,32 @@ impl Solution for DaySolution {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::day2::DaySolution;
+    use crate::Solution;
+
+    #[test]
+    fn part_1() {
+        let input = include_str!("../../inputs/day2_demo.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("150", result.to_string())
+    }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day2_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("900", result.to_string())
+    }
+}
+
 // Bash solution
 // echo "Part 1: $(cat input.txt | sed -r 's/forward (.*)/\1 0/g' | sed -r 's/down /0 /g' | sed -r 's/up /0 -/g' | awk '{ h += $1; d += $2 } END { print d * h; }')"
 // echo "Part 2: $(cat input.txt | sed -r 's/forward (.*)/\1 \1 0 1/g' | sed -r 's/down (.*)/0 0 \1 0/g' | sed -r 's/up (.*)/0 0 -\1 0/g' | awk '{ h += $1; a +=$3; d += $2 * a * $4} END { print d * h}')"

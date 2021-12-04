@@ -134,3 +134,29 @@ impl Solution for DaySolution {
         Ok(Box::new(sum * (*num as u32)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::day4::DaySolution;
+    use crate::Solution;
+
+    #[test]
+    fn part_1() {
+        let input = include_str!("../../inputs/day4_demo.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("4512", result.to_string())
+    }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day4_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("1924", result.to_string())
+    }
+}

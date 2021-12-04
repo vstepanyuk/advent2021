@@ -36,3 +36,29 @@ impl Solution for DaySolution {
         Ok(Box::new(self.solve(&sums)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::day1::DaySolution;
+    use crate::Solution;
+
+    #[test]
+    fn part_1() {
+        let input = include_str!("../../inputs/day1_demo.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("7", result.to_string())
+    }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day1_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("5", result.to_string())
+    }
+}
