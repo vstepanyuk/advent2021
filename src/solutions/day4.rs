@@ -9,32 +9,30 @@ struct BoardNum(u8, bool);
 type Board = Vec<BoardNum>;
 
 trait Playable {
-    fn play(&mut self, value: u8);
-    fn is_winning(&self) -> bool;
+    fn play_and_check(&mut self, value: u8) -> bool;
 }
 
 impl Playable for Board {
-    fn play(&mut self, value: u8) {
-        for item in self.iter_mut() {
-            if value == item.0 {
-                item.1 = true;
+    fn play_and_check(&mut self, value: u8) -> bool {
+        let mut found_index = None;
+        for (index, mut num) in self.iter_mut().enumerate() {
+            if value == num.0 {
+                num.1 = true;
+                found_index = Some(index);
                 break;
             }
         }
-    }
 
-    fn is_winning(&self) -> bool {
-        for y in 0..5 {
-            if (0..5).filter(|&x| self[x + y * 5].1).count() == 5 {
-                return true;
-            }
+        let index = match found_index {
+            None => return false,
+            Some(index) => index,
+        };
 
-            if (0..5).filter(|&x| self[y + x * 5].1).count() == 5 {
-                return true;
-            }
-        }
+        let row = index / 5;
+        let col = index % 5;
 
-        false
+        (0..5).filter(|&i| self[i + row * 5].1).count() == 5
+            || (0..5).filter(|&i| self[col + i * 5].1).count() == 5
     }
 }
 
@@ -91,9 +89,7 @@ impl Solution for DaySolution {
 
         for num in nums {
             for board in boards.iter_mut() {
-                board.play(num);
-
-                if board.is_winning() {
+                if board.play_and_check(num) {
                     winner = Some((board.to_vec(), num));
                     break;
                 }
@@ -126,9 +122,7 @@ impl Solution for DaySolution {
         let total_boards = boards.len();
         for num in nums {
             for (index, board) in boards.iter_mut().enumerate() {
-                board.play(num);
-
-                if board.is_winning() && !winners_idx.contains(&index) {
+                if !winners_idx.contains(&index) && board.play_and_check(num) {
                     winners_idx.push(index);
                     winners.push((board.to_vec(), num));
                 }
