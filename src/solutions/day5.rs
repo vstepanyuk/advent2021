@@ -34,16 +34,6 @@ struct Segment {
 }
 
 impl Segment {
-    #[inline]
-    fn is_horizontal(&self) -> bool {
-        self.start.1 == self.end.1
-    }
-
-    #[inline]
-    fn is_vertical(&self) -> bool {
-        self.start.0 == self.end.0
-    }
-
     fn direction(&self) -> (i32, i32) {
         match (self.start.0, self.start.1, self.end.0, self.end.1) {
             (x1, y1, x2, y2) if x1 == x2 && y1 < y2 => (0, 1),
@@ -99,9 +89,9 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        Ok(Box::new(
-            self.solve(input, |s| s.is_horizontal() || s.is_vertical()),
-        ))
+        Ok(Box::new(self.solve(input, |s| {
+            s.start.0 == s.end.0 || s.start.1 == s.end.1
+        })))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
