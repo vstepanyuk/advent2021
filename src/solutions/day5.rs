@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::num::ParseIntError;
 use std::str::FromStr;
@@ -9,7 +9,7 @@ use crate::solutions::{Result, Solution};
 #[derive(Default)]
 pub struct DaySolution;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 struct Point(i32, i32);
 
 impl Point {
@@ -24,11 +24,10 @@ impl FromStr for Point {
 
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         let (x, y) = s.split_once(',').unwrap_or_default();
-        return Ok(Point(x.parse()?, y.parse()?));
+        Ok(Point(x.parse()?, y.parse()?))
     }
 }
 
-#[derive(Debug)]
 struct Segment {
     start: Point,
     end: Point,
@@ -64,27 +63,33 @@ impl FromStr for Segment {
 
     fn from_str(s: &str) -> core::result::Result<Self, Self::Err> {
         let (s, e) = s.split_once(" -> ").unwrap_or_default();
-        return Ok(Segment {
+        Ok(Segment {
             start: s.parse()?,
             end: e.parse()?,
-        });
+        })
     }
 }
 
-trait Map: Debug {
-    fn space_size(&self) -> (i32, i32);
-}
+impl DaySolution {
+    fn solve<P>(&self, input: Option<String>, predicate: P) -> usize
+    where
+        P: FnMut(&Segment) -> bool,
+    {
+        let mut map: HashMap<Point, i32> = HashMap::new();
+        let segments = parse_lines::<Segment>(input);
 
-impl Map for Vec<Segment> {
-    fn space_size(&self) -> (i32, i32) {
-        let (width, height) = self.iter().fold((0, 0), |(w, h), s| {
-            (
-                max(w, max(s.start.0, s.end.0)),
-                max(h, max(s.start.1, s.end.1)),
-            )
+        segments.into_iter().filter(predicate).for_each(|s| {
+            let direction = s.direction();
+            let mut start = s.start;
+
+            while start != s.end {
+                *map.entry(start).or_insert(0) += 1;
+                start.move_by(direction);
+            }
+            *map.entry(start).or_insert(0) += 1;
         });
 
-        (width + 1, height + 1)
+        map.values().filter(|&&count| count > 1).count()
     }
 }
 
@@ -94,48 +99,13 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let segments = parse_lines::<Segment>(input);
-        let (width, height) = segments.space_size();
-
-        let mut board = vec![0; (width * height) as usize];
-        segments
-            .iter()
-            .filter(|s| s.is_horizontal() || s.is_vertical())
-            .for_each(|s| {
-                let direction = s.direction();
-                let mut start = s.start.clone();
-
-                while start != s.end {
-                    board[(start.0 + start.1 * width) as usize] += 1;
-                    start.move_by(direction);
-                }
-
-                board[(start.0 + start.1 * width) as usize] += 1;
-            });
-
-        let result = board.iter().filter(|&&v| v >= 2).count();
-        Ok(Box::new(result))
+        Ok(Box::new(
+            self.solve(input, |s| s.is_horizontal() || s.is_vertical()),
+        ))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let segments = parse_lines::<Segment>(input);
-        let (width, height) = segments.space_size();
-
-        let mut board = vec![0; (width * height) as usize];
-        segments.iter().for_each(|s| {
-            let direction = s.direction();
-            let mut start = s.start.clone();
-
-            while start != s.end {
-                board[(start.0 + start.1 * width) as usize] += 1;
-                start.move_by(direction);
-            }
-
-            board[(start.0 + start.1 * width) as usize] += 1;
-        });
-
-        let result = board.iter().filter(|&&v| v >= 2).count();
-        Ok(Box::new(result))
+        Ok(Box::new(self.solve(input, |_| true)))
     }
 }
 
