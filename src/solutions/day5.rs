@@ -61,20 +61,18 @@ impl FromStr for Segment {
 }
 
 impl DaySolution {
-    fn solve<P>(&self, input: Option<String>, predicate: P) -> usize
-    where
-        P: FnMut(&Segment) -> bool,
-    {
+    fn solve(&self, input: Option<String>, predicate: Option<fn(&Segment) -> bool>) -> usize {
         let mut map: HashMap<Point, i32> = HashMap::new();
         let segments = parse_lines::<Segment>(input);
+        let predicate = predicate.unwrap_or(|_| true);
 
         segments.into_iter().filter(predicate).for_each(|s| {
-            let direction = s.direction();
             let mut start = s.start;
+            let offset = s.direction();
 
             while start != s.end {
                 *map.entry(start).or_insert(0) += 1;
-                start.move_by(direction);
+                start.move_by(offset);
             }
             *map.entry(start).or_insert(0) += 1;
         });
@@ -89,13 +87,14 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        Ok(Box::new(self.solve(input, |s| {
-            s.start.0 == s.end.0 || s.start.1 == s.end.1
-        })))
+        Ok(Box::new(self.solve(
+            input,
+            Some(|s| s.start.0 == s.end.0 || s.start.1 == s.end.1),
+        )))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        Ok(Box::new(self.solve(input, |_| true)))
+        Ok(Box::new(self.solve(input, None)))
     }
 }
 
