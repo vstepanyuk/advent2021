@@ -12,23 +12,16 @@ impl DaySolution {
             .filter_map(|s| s.parse::<i32>().ok())
             .collect();
 
-        let mut days_fish = [0u64; 9];
-
-        fish.iter().for_each(|&f| {
-            days_fish[f as usize] += 1;
-        });
+        let mut counter = (0..9)
+            .map(|i| fish.iter().filter(|&&f| f == i).count() as u64)
+            .collect::<Vec<u64>>();
 
         for _ in 0..days {
-            let count = days_fish[0];
-            for i in 0..8 {
-                days_fish[i] = days_fish[i + 1];
-            }
-
-            days_fish[6] += count;
-            days_fish[8] = count;
+            counter.rotate_left(1);
+            counter[6] += counter[8];
         }
 
-        days_fish.iter().sum::<u64>()
+        counter.iter().sum()
     }
 }
 
