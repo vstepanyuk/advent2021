@@ -40,7 +40,7 @@ impl Solution for DaySolution {
 
         let mut days_fish = [0u64; 9];
 
-        fish.iter().for_each(|f| {
+        fish.iter().for_each(|&f| {
             days_fish[f as usize] += 1;
         });
 
