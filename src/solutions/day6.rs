@@ -44,21 +44,14 @@ impl Solution for DaySolution {
             days_fish[f as usize] += 1;
         });
 
-        let mut days = 0;
-        loop {
+        for _ in 0..256 {
             let count = days_fish[0];
-
             for i in 0..8 {
                 days_fish[i] = days_fish[i + 1];
             }
 
             days_fish[6] += count;
             days_fish[8] = count;
-            days += 1;
-
-            if days >= 256 {
-                break;
-            }
         }
 
         Ok(Box::new(days_fish.iter().sum::<u64>()))
