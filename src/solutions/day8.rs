@@ -13,14 +13,10 @@ trait Digit {
 
 impl Digit for &str {
     fn to_bin(&self) -> u8 {
-        let mut result = 0;
-        for (index, ch) in ('a'..='g').enumerate() {
-            if self.contains(ch) {
-                result |= 1 << index;
-            }
-        }
-
-        result
+        ('a'..='g')
+            .enumerate()
+            .filter(|item| self.contains(item.1))
+            .fold(0, |result, (index, _)| result | (1 << index))
     }
 }
 
