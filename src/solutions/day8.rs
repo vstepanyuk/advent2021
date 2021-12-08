@@ -11,6 +11,18 @@ trait Sorted {
     fn resorted(&self) -> String;
 }
 
+trait Substring {
+    fn count_chars_from(&self, from: &Self) -> usize;
+}
+
+impl Substring for String {
+    fn count_chars_from(&self, from: &Self) -> usize {
+        self.chars()
+            .filter(|ch| from.chars().any(|c| c == *ch))
+            .count()
+    }
+}
+
 impl Sorted for &str {
     fn resorted(&self) -> String {
         let mut chars = self.chars().collect::<Vec<char>>();
@@ -54,69 +66,36 @@ impl Solution for DaySolution {
             .collect::<Vec<(Vec<String>, Vec<String>)>>();
         let mut sum = 0;
 
-        for (l1, l2) in entries {
-            let mut hash_map: HashMap<String, i32> = HashMap::new();
-            let ll1 = l1.clone();
+        for (patterns, output) in entries {
+            let mut mapping: HashMap<String, i32> = HashMap::new();
 
-            let one = ll1.iter().find(|a| a.len() == 2).unwrap();
-            let four = ll1.iter().find(|a| a.len() == 4).unwrap();
+            let digit_one = patterns.clone().into_iter().find(|a| a.len() == 2).unwrap();
+            let digit_four = patterns.clone().into_iter().find(|a| a.len() == 4).unwrap();
 
-            for d in l1 {
-                let digit = match d.len() {
+            for pattern in patterns {
+                let digit = match pattern.len() {
                     2 => 1,
                     4 => 4,
                     3 => 7,
                     7 => 8,
-                    5 => {
-                        if d.chars()
-                            .filter(|ch| return one.chars().any(|c| c == *ch))
-                            .count()
-                            == 2
-                        {
-                            3
-                        } else if d
-                            .chars()
-                            .filter(|ch| return four.chars().any(|c| c == *ch))
-                            .count()
-                            == 3
-                        {
-                            5
-                        } else {
-                            2
-                        }
-                    }
-                    6 => {
-                        // 0, 9 , 6
-                        if d.chars()
-                            .filter(|ch| return one.chars().any(|c| c == *ch))
-                            .count()
-                            == 1
-                        {
-                            6
-                        } else if d
-                            .chars()
-                            .filter(|ch| return four.chars().any(|c| c == *ch))
-                            .count()
-                            == 4
-                        {
-                            9
-                        } else {
-                            0
-                        }
-                    }
+                    5 if pattern.count_chars_from(&digit_one) == 2 => 3,
+                    5 if pattern.count_chars_from(&digit_four) == 3 => 5,
+                    5 => 2,
+                    6 if pattern.count_chars_from(&digit_one) == 1 => 6,
+                    6 if pattern.count_chars_from(&digit_four) == 4 => 9,
+                    6 => 0,
                     _ => unreachable!(),
                 };
 
-                hash_map.insert(d, digit);
+                mapping.insert(pattern, digit);
             }
 
-            let mut string = String::default();
-            for ll2 in l2.iter() {
-                let digit = hash_map.get(ll2).unwrap();
-                string = format!("{}{}", string, digit);
-            }
+            let result = output.iter().fold(0, |value, pattern| {
+                let digit = *mapping.get(pattern).unwrap();
+                value * 10 + digit
+            });
 
-            sum += string.parse::<i32>().unwrap();
+            sum += result;
         }
 
         Ok(Box::new(sum))
