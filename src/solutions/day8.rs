@@ -57,37 +57,36 @@ impl Solution for DaySolution {
         let entries = parse_lines::<String>(input)
             .iter()
             .map(|s| {
-                let (s1, s2) = s.split_once(" | ").unwrap();
-                (
-                    s1.split(' ').map(|s| s.resorted()).collect::<Vec<String>>(),
-                    s2.split(' ').map(|s| s.resorted()).collect::<Vec<String>>(),
-                )
+                s.split(" | ")
+                    .map(|s| s.split(' ').map(|s| s.resorted()).collect::<Vec<String>>())
+                    .collect::<Vec<Vec<String>>>()
             })
-            .collect::<Vec<(Vec<String>, Vec<String>)>>();
+            .collect::<Vec<Vec<Vec<String>>>>();
         let mut sum = 0;
 
-        for (patterns, output) in entries {
+        for entry in entries {
+            let (patterns, output) = (&entry[0], &entry[1]);
             let mut mapping: HashMap<String, i32> = HashMap::new();
 
-            let digit_one = patterns.clone().into_iter().find(|a| a.len() == 2).unwrap();
-            let digit_four = patterns.clone().into_iter().find(|a| a.len() == 4).unwrap();
+            let digit_one = patterns.iter().find(|a| a.len() == 2).unwrap();
+            let digit_four = patterns.iter().find(|a| a.len() == 4).unwrap();
 
             for pattern in patterns {
                 let digit = match pattern.len() {
                     2 => 1,
                     3 => 7,
                     4 => 4,
-                    5 if pattern.intersection_chars_count(&digit_one) == 2 => 3,
-                    5 if pattern.intersection_chars_count(&digit_four) == 3 => 5,
+                    5 if pattern.intersection_chars_count(digit_one) == 2 => 3,
+                    5 if pattern.intersection_chars_count(digit_four) == 3 => 5,
                     5 => 2,
-                    6 if pattern.intersection_chars_count(&digit_one) == 1 => 6,
-                    6 if pattern.intersection_chars_count(&digit_four) == 4 => 9,
+                    6 if pattern.intersection_chars_count(digit_one) == 1 => 6,
+                    6 if pattern.intersection_chars_count(digit_four) == 4 => 9,
                     6 => 0,
                     7 => 8,
                     _ => unreachable!(),
                 };
 
-                mapping.insert(pattern, digit);
+                mapping.insert(pattern.to_string(), digit);
             }
 
             let result = output.iter().fold(0, |value, pattern| {
