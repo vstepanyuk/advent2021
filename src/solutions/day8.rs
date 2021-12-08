@@ -75,15 +75,15 @@ impl Solution for DaySolution {
             for pattern in patterns {
                 let digit = match pattern.len() {
                     2 => 1,
-                    4 => 4,
                     3 => 7,
-                    7 => 8,
+                    4 => 4,
                     5 if pattern.count_chars_from(&digit_one) == 2 => 3,
                     5 if pattern.count_chars_from(&digit_four) == 3 => 5,
                     5 => 2,
                     6 if pattern.count_chars_from(&digit_one) == 1 => 6,
                     6 if pattern.count_chars_from(&digit_four) == 4 => 9,
                     6 => 0,
+                    7 => 8,
                     _ => unreachable!(),
                 };
 
