@@ -26,7 +26,7 @@ impl Substring for String {
 impl Sorted for &str {
     fn resorted(&self) -> String {
         let mut chars = self.chars().collect::<Vec<char>>();
-        chars.sort();
+        chars.sort_unstable();
         chars.into_iter().collect()
     }
 }
@@ -47,7 +47,7 @@ impl Solution for DaySolution {
 
         let count = lengths_arr
             .iter()
-            .map(|l| l.into_iter().filter(|&a| [2, 3, 4, 7].contains(a)).count())
+            .map(|l| l.iter().filter(|&a| [2, 3, 4, 7].contains(a)).count())
             .sum::<usize>();
 
         Ok(Box::new(count))

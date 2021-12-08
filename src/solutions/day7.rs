@@ -36,9 +36,9 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        Ok(Box::new(self.solve(input, |v, a| {
-            (1..=(v - a).abs()).fold(0, |sum, curr| sum + curr)
-        })))
+        Ok(Box::new(
+            self.solve(input, |v, a| (1..=(v - a).abs()).sum()),
+        ))
     }
 }
 
