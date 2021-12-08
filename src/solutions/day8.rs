@@ -15,7 +15,7 @@ impl Digit for &str {
     fn to_bin(&self) -> u8 {
         ('a'..='g')
             .enumerate()
-            .filter(|item| self.contains(item.1))
+            .filter(|(_, ch)| self.contains(*ch))
             .fold(0, |result, (index, _)| result | (1 << index))
     }
 }
