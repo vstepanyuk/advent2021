@@ -60,9 +60,9 @@ impl Solution for DaySolution {
                 let digit_one = patterns.iter().find(|a| a.count_ones() == 2).unwrap();
                 let digit_four = patterns.iter().find(|a| a.count_ones() == 4).unwrap();
 
-                let mapping: HashMap<_, _> = HashMap::from_iter(patterns.iter().map(|pattern| {
+                let mapping: HashMap<_, _> = HashMap::from_iter(patterns.iter().map(|&pattern| {
                     (
-                        pattern.to_owned(),
+                        pattern,
                         match pattern.count_ones() {
                             2 => 1,
                             3 => 7,
