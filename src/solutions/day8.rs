@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 
 use crate::helpers::parse_lines;
@@ -12,15 +12,7 @@ trait Sorted {
 }
 
 trait Substring {
-    fn count_chars_from(&self, from: &Self) -> usize;
-}
-
-impl Substring for String {
-    fn count_chars_from(&self, from: &Self) -> usize {
-        self.chars()
-            .filter(|ch| from.chars().any(|c| c == *ch))
-            .count()
-    }
+    fn intersection_chars_count(&self, from: &Self) -> usize;
 }
 
 impl Sorted for &str {
@@ -31,26 +23,34 @@ impl Sorted for &str {
     }
 }
 
+impl Substring for String {
+    fn intersection_chars_count(&self, from: &Self) -> usize {
+        let a: HashSet<_> = HashSet::from_iter(self.chars());
+        let b: HashSet<_> = HashSet::from_iter(from.chars());
+        a.intersection(&b).count()
+    }
+}
+
 impl Solution for DaySolution {
     fn new() -> Self {
         Self {}
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let lengths_arr = parse_lines::<String>(input)
+        let result = parse_lines::<String>(input)
             .iter()
             .map(|s| {
-                let (_, output) = s.split_once(" | ").unwrap();
-                output.split(' ').map(|s| s.len()).collect::<Vec<usize>>()
+                s.split_once(" | ")
+                    .unwrap()
+                    .1
+                    .split(' ')
+                    .map(|s| s.len())
+                    .filter(|l| [2, 3, 4, 7].contains(l))
+                    .count()
             })
-            .collect::<Vec<Vec<usize>>>();
-
-        let count = lengths_arr
-            .iter()
-            .map(|l| l.iter().filter(|&a| [2, 3, 4, 7].contains(a)).count())
             .sum::<usize>();
 
-        Ok(Box::new(count))
+        Ok(Box::new(result))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
@@ -77,11 +77,11 @@ impl Solution for DaySolution {
                     2 => 1,
                     3 => 7,
                     4 => 4,
-                    5 if pattern.count_chars_from(&digit_one) == 2 => 3,
-                    5 if pattern.count_chars_from(&digit_four) == 3 => 5,
+                    5 if pattern.intersection_chars_count(&digit_one) == 2 => 3,
+                    5 if pattern.intersection_chars_count(&digit_four) == 3 => 5,
                     5 => 2,
-                    6 if pattern.count_chars_from(&digit_one) == 1 => 6,
-                    6 if pattern.count_chars_from(&digit_four) == 4 => 9,
+                    6 if pattern.intersection_chars_count(&digit_one) == 1 => 6,
+                    6 if pattern.intersection_chars_count(&digit_four) == 4 => 9,
                     6 => 0,
                     7 => 8,
                     _ => unreachable!(),
