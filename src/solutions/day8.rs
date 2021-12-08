@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::Display;
 
 use crate::helpers::parse_lines;
@@ -7,27 +7,20 @@ use crate::solutions::{Result, Solution};
 #[derive(Default)]
 pub struct DaySolution;
 
-trait Sorted {
-    fn resorted(&self) -> String;
+trait Digit {
+    fn to_bin(&self) -> u8;
 }
 
-trait Substring {
-    fn intersection_chars_count(&self, from: &Self) -> usize;
-}
+impl Digit for &str {
+    fn to_bin(&self) -> u8 {
+        let mut result = 0;
+        for (index, ch) in ('a'..='g').enumerate() {
+            if self.contains(ch) {
+                result |= 1 << index;
+            }
+        }
 
-impl Sorted for &str {
-    fn resorted(&self) -> String {
-        let mut chars = self.chars().collect::<Vec<char>>();
-        chars.sort_unstable();
-        chars.into_iter().collect()
-    }
-}
-
-impl Substring for String {
-    fn intersection_chars_count(&self, from: &Self) -> usize {
-        let a: HashSet<_> = HashSet::from_iter(self.chars());
-        let b: HashSet<_> = HashSet::from_iter(from.chars());
-        a.intersection(&b).count()
+        result
     }
 }
 
@@ -58,46 +51,45 @@ impl Solution for DaySolution {
             .iter()
             .map(|s| {
                 s.split(" | ")
-                    .map(|s| s.split(' ').map(|s| s.resorted()).collect::<Vec<String>>())
-                    .collect::<Vec<Vec<String>>>()
+                    .map(|s| s.split(' ').map(|s| s.to_bin()).collect::<Vec<u8>>())
+                    .collect::<Vec<Vec<u8>>>()
             })
-            .collect::<Vec<Vec<Vec<String>>>>();
-        let mut sum = 0;
+            .collect::<Vec<Vec<Vec<u8>>>>();
 
-        for entry in entries {
-            let (patterns, output) = (&entry[0], &entry[1]);
-            let mut mapping: HashMap<String, i32> = HashMap::new();
+        let result = entries
+            .iter()
+            .map(|entry| {
+                let (patterns, output) = (&entry[0], &entry[1]);
 
-            let digit_one = patterns.iter().find(|a| a.len() == 2).unwrap();
-            let digit_four = patterns.iter().find(|a| a.len() == 4).unwrap();
+                let digit_one = patterns.iter().find(|a| a.count_ones() == 2).unwrap();
+                let digit_four = patterns.iter().find(|a| a.count_ones() == 4).unwrap();
 
-            for pattern in patterns {
-                let digit = match pattern.len() {
-                    2 => 1,
-                    3 => 7,
-                    4 => 4,
-                    5 if pattern.intersection_chars_count(digit_one) == 2 => 3,
-                    5 if pattern.intersection_chars_count(digit_four) == 3 => 5,
-                    5 => 2,
-                    6 if pattern.intersection_chars_count(digit_one) == 1 => 6,
-                    6 if pattern.intersection_chars_count(digit_four) == 4 => 9,
-                    6 => 0,
-                    7 => 8,
-                    _ => unreachable!(),
-                };
+                let mapping: HashMap<_, _> = HashMap::from_iter(patterns.iter().map(|pattern| {
+                    (
+                        pattern.to_owned(),
+                        match pattern.count_ones() {
+                            2 => 1,
+                            3 => 7,
+                            4 => 4,
+                            5 if (pattern & digit_one).count_ones() == 2 => 3,
+                            5 if (pattern & digit_four).count_ones() == 3 => 5,
+                            5 => 2,
+                            6 if (pattern & digit_one).count_ones() == 1 => 6,
+                            6 if (pattern & digit_four).count_ones() == 4 => 9,
+                            6 => 0,
+                            7 => 8,
+                            _ => unreachable!(),
+                        },
+                    )
+                }));
 
-                mapping.insert(pattern.to_string(), digit);
-            }
+                output.iter().fold(0, |value, pattern| {
+                    value * 10 + *mapping.get(pattern).unwrap()
+                })
+            })
+            .sum::<i32>();
 
-            let result = output.iter().fold(0, |value, pattern| {
-                let digit = *mapping.get(pattern).unwrap();
-                value * 10 + digit
-            });
-
-            sum += result;
-        }
-
-        Ok(Box::new(sum))
+        Ok(Box::new(result))
     }
 }
 
