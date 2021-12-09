@@ -6,6 +6,40 @@ use std::fmt::Display;
 #[derive(Default)]
 pub struct DaySolution;
 
+trait VecMap<T: Clone> {
+    // fn at(&self, x: i32, y: i32, width: usize) -> Option<T>;
+    fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize>;
+}
+
+impl<T> VecMap<T> for Vec<T>
+where
+    T: Clone,
+{
+    fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize> {
+        let x = index % width;
+        let y = index / width;
+
+        let mut result = vec![];
+        if x > 0 {
+            result.push(x - 1 + y * width);
+        }
+
+        if y > 0 {
+            result.push(x + (y - 1) * width);
+        }
+
+        if (x + 1) < width {
+            result.push(x + 1 + y * width);
+        }
+
+        if (x + (y + 1) * width) < self.len() {
+            result.push(x + (y + 1) * width);
+        }
+
+        result
+    }
+}
+
 impl DaySolution {}
 
 impl Solution for DaySolution {
@@ -16,7 +50,6 @@ impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines::<String>(input);
         let width = lines[0].len();
-        let height = lines.len();
 
         let mut board: Vec<i32> = vec![];
 
@@ -28,33 +61,23 @@ impl Solution for DaySolution {
 
             board.extend(value);
         }
-        let mut result = vec![];
 
-        for i in 0..board.len() {
-            let v = board.get(i).unwrap();
-            let y = i / width;
-            let x = i % width;
+        let result = board
+            .iter()
+            .enumerate()
+            .filter_map(|(index, &value)| {
+                if board
+                    .neighbour_indexes(index, width)
+                    .iter()
+                    .all(|&n_index| board[index] < board[n_index])
+                {
+                    return Some(value + 1);
+                }
+                None
+            })
+            .sum::<i32>();
 
-            let l = if x > 0 {
-                board.get(x - 1 + y * width).unwrap_or(&i32::MAX)
-            } else {
-                &i32::MAX
-            };
-            let t = if y > 0 {
-                board.get(x + (y - 1) * width).unwrap_or(&i32::MAX)
-            } else {
-                &i32::MAX
-            };
-
-            let r = board.get(x + 1 + y * width).unwrap_or(&i32::MAX);
-            let b = board.get(x + (y + 1) * width).unwrap_or(&i32::MAX);
-
-            if v < l && v < r && v < t && v < b {
-                result.push(*v + 1);
-            }
-        }
-
-        Ok(Box::new(result.iter().sum::<i32>()))
+        Ok(Box::new(result))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
