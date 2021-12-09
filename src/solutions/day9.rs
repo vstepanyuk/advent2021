@@ -51,16 +51,11 @@ impl Solution for DaySolution {
         let lines = parse_lines::<String>(input);
         let width = lines[0].len();
 
-        let mut board: Vec<i32> = vec![];
-
-        for line in lines {
-            let value = line
-                .chars()
-                .map(|ch| (ch as u8 - b'0') as i32)
-                .collect::<Vec<i32>>();
-
-            board.extend(value);
-        }
+        let board = lines
+            .iter()
+            .map(|line| line.chars().map(|ch| (ch as u8 - b'0') as i32))
+            .flatten()
+            .collect::<Vec<i32>>();
 
         let result = board
             .iter()
