@@ -9,7 +9,7 @@ pub fn parse_lines<T: FromStr>(input: Option<String>) -> Vec<T> {
         .collect()
 }
 
-pub struct Matrix<T: Default> {
+pub struct Matrix<T> {
     pub width: usize,
     pub height: usize,
     data: Vec<T>,
@@ -86,6 +86,21 @@ impl<T: Default> Matrix<T> {
             .filter_map(|(dx, dy)| self.get(x + dx, y + dy))
             .collect()
     }
+    //
+    // pub fn neighbours_pos<P>(&self, x: P, y: P) -> Vec<(usize, usize)>
+    // where
+    //     P: TryInto<i32>,
+    // {
+    //     let x = x.try_into().ok().unwrap();
+    //     let y = y.try_into().ok().unwrap();
+    //     let offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+    //
+    //     offsets
+    //         .iter()
+    //         .filter(|(dx, dy)| self.get_index(x + dx, y + dy).is_some())
+    //         .map(|(dx, dy)| ((x + dx) as usize, (y + dy) as usize))
+    //         .collect()
+    // }
 }
 
 impl<T: Default + FromStr> Matrix<T> {
@@ -186,13 +201,49 @@ impl<T> VecAsMatrix<T> for [T] {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::helpers::Matrix;
+// pub struct MatrixCell<'a, T: Default> {
+//     pub x: usize,
+//     pub y: usize,
+//     pub value: &'a T,
+//     pub matrix: &'a Matrix<T>,
+// }
+//
+// impl<'a, T> Matrix<T>
+// where
+//     T: 'a + Default,
+//     Self: 'a,
+// {
+//     fn cell_at(&self, x: i32, y: i32) -> Option<MatrixCell<T>> {
+//         let value = self.get(x, y);
+//         value.map(|value| MatrixCell {
+//             x: x as usize,
+//             y: y as usize,
+//             value,
+//             matrix: self,
+//         })
+//     }
+// }
+//
+// impl<'a, T: Default> MatrixCell<'a, T> {
+//     fn neighbours(&self) -> Vec<MatrixCell<'a, T>>
+//     where
+//         T: 'a,
+//     {
+//         self.matrix
+//             .neighbours_pos(self.x, self.y)
+//             .iter()
+//             .filter_map(|(x, y)| self.matrix.cell_at(*x as i32, *y as i32))
+//             .collect()
+//     }
+// }
 
-    #[test]
-    fn test_matrix() {
-        let matrix: Matrix<i32> = Matrix::new(5, 5);
-        println!("{:?}", matrix);
-    }
-}
+// #[cfg(test)]
+// mod test {
+//     use crate::helpers::Matrix;
+//
+//     #[test]
+//     fn test_matrix() {
+//         let matrix: Matrix<i32> = Matrix::new(5, 5);
+//         println!("{:?}", matrix);
+//     }
+// }
