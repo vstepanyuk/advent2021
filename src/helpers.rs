@@ -16,7 +16,7 @@ where
     fn neighbours(&self, index: usize, width: usize) -> Vec<T>;
 }
 
-impl<T> VecAsMatrix<T> for Vec<T>
+impl<T> VecAsMatrix<T> for [T]
 where
     T: Clone,
 {
