@@ -14,26 +14,17 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let lines = parse_lines::<String>(input);
-        let width = lines[0].len();
+        let matrix = Matrix::<i32>::from(&input.unwrap()).unwrap();
+        let mut result = 0;
 
-        let heightmap = lines
-            .iter()
-            .map(|line| line.chars().map(|ch| ch.to_digit(10).unwrap()))
-            .flatten()
-            .collect::<Vec<_>>();
-
-        let result = heightmap
-            .iter()
-            .enumerate()
-            .filter(|(index, &value)| {
-                heightmap
-                    .neighbour_indexes(*index, width)
-                    .iter()
-                    .all(|&n_index| value < heightmap[n_index])
-            })
-            .map(|(_, &value)| value + 1)
-            .sum::<u32>();
+        for x in 0..matrix.width {
+            for y in 0..matrix.height {
+                let value = matrix.get(x, y).unwrap();
+                if matrix.neighbours(x, y).iter().all(|&v| v > value) {
+                    result += value + 1;
+                }
+            }
+        }
 
         Ok(Box::new(result))
     }

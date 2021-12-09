@@ -1,3 +1,5 @@
+#![feature(pattern)]
+
 use clap::{App, AppSettings, Arg, SubCommand};
 
 use solutions::*;
