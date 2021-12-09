@@ -15,8 +15,9 @@ impl Solution for DaySolution {
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines::<String>(input);
-
         let width = lines[0].len();
+        let height = lines.len();
+
         let mut board: Vec<i32> = vec![];
 
         for line in lines {
@@ -29,15 +30,24 @@ impl Solution for DaySolution {
         }
         let mut result = vec![];
 
-        for x in 0..board.len() {
-            let v = board.get(x).unwrap();
-            let y = x / width;
-            let xx = x % width;
+        for i in 0..board.len() {
+            let v = board.get(i).unwrap();
+            let y = i / width;
+            let x = i % width;
 
-            let l = board.get(xx - 1 + y * width).unwrap_or(&i32::MAX);
-            let r = board.get(xx + 1 + y * width).unwrap_or(&i32::MAX);
-            let t = board.get(xx + (y - 1) * width).unwrap_or(&i32::MAX);
-            let b = board.get(xx + (y + 1) * width).unwrap_or(&i32::MAX);
+            let l = if x > 0 {
+                board.get(x - 1 + y * width).unwrap_or(&i32::MAX)
+            } else {
+                &i32::MAX
+            };
+            let t = if y > 0 {
+                board.get(x + (y - 1) * width).unwrap_or(&i32::MAX)
+            } else {
+                &i32::MAX
+            };
+
+            let r = board.get(x + 1 + y * width).unwrap_or(&i32::MAX);
+            let b = board.get(x + (y + 1) * width).unwrap_or(&i32::MAX);
 
             if v < l && v < r && v < t && v < b {
                 result.push(*v + 1);
@@ -51,6 +61,8 @@ impl Solution for DaySolution {
         let lines = parse_lines::<String>(input);
 
         let width = lines[0].len();
+        let height = lines.len();
+
         let mut board: Vec<i32> = vec![];
 
         for line in lines {
@@ -61,31 +73,14 @@ impl Solution for DaySolution {
 
             board.extend(value);
         }
-        let height = board.len() / width;
-        let mut points: Vec<(usize, usize)> = vec![];
-
-        for x in 0..board.len() {
-            let v = board.get(x).unwrap();
-            let y = x / width;
-            let xx = x % width;
-
-            let l = board.get(xx - 1 + y * width).unwrap_or(&i32::MAX);
-            let r = board.get(xx + 1 + y * width).unwrap_or(&i32::MAX);
-            let t = board.get(xx + (y - 1) * width).unwrap_or(&i32::MAX);
-            let b = board.get(xx + (y + 1) * width).unwrap_or(&i32::MAX);
-
-            if v < l && v < r && v < t && v < b {
-                points.push((xx, y));
-            }
-        }
 
         let mut counts: Vec<i32> = vec![];
         let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
 
-        for point in points.iter() {
-            let (x, y) = point;
+        for i in 0..board.len() {
+            let (x, y) = (i % width, i / width);
 
-            queue.push_back((*x, *y));
+            queue.push_back((x, y));
             let mut count = 0;
 
             while !queue.is_empty() {
@@ -145,6 +140,6 @@ mod tests {
             .part_2(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("", result.to_string())
+        assert_eq!("1134", result.to_string())
     }
 }
