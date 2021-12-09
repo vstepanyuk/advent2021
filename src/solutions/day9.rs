@@ -7,7 +7,6 @@ use std::fmt::Display;
 pub struct DaySolution;
 
 trait VecMap<T: Clone> {
-    // fn at(&self, x: i32, y: i32, width: usize) -> Option<T>;
     fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize>;
 }
 
@@ -51,80 +50,60 @@ impl Solution for DaySolution {
         let lines = parse_lines::<String>(input);
         let width = lines[0].len();
 
-        let board = lines
+        let heightmap = lines
             .iter()
-            .map(|line| line.chars().map(|ch| (ch as u8 - b'0') as i32))
+            .map(|line| line.chars().map(|ch| ch.to_digit(10).unwrap()))
             .flatten()
-            .collect::<Vec<i32>>();
+            .collect::<Vec<_>>();
 
-        let result = board
+        let result = heightmap
             .iter()
             .enumerate()
-            .filter_map(|(index, &value)| {
-                if board
-                    .neighbour_indexes(index, width)
+            .filter(|(index, &value)| {
+                heightmap
+                    .neighbour_indexes(*index, width)
                     .iter()
-                    .all(|&n_index| board[index] < board[n_index])
-                {
-                    return Some(value + 1);
-                }
-                None
+                    .all(|&n_index| value < heightmap[n_index])
             })
-            .sum::<i32>();
+            .map(|(_, &value)| value + 1)
+            .sum::<u32>();
 
         Ok(Box::new(result))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines::<String>(input);
-
         let width = lines[0].len();
-        let height = lines.len();
 
-        let mut board: Vec<i32> = vec![];
-
-        for line in lines {
-            let value = line
-                .chars()
-                .map(|ch| (ch as u8 - b'0') as i32)
-                .collect::<Vec<i32>>();
-
-            board.extend(value);
-        }
+        let mut heightmap = lines
+            .iter()
+            .map(|line| line.chars().map(|ch| ch.to_digit(10).unwrap()))
+            .flatten()
+            .collect::<Vec<_>>();
 
         let mut counts: Vec<i32> = vec![];
-        let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
+        let mut queue: VecDeque<_> = VecDeque::new();
 
-        for i in 0..board.len() {
-            let (x, y) = (i % width, i / width);
+        for i in 0..heightmap.len() {
+            if heightmap[i] >= 9 {
+                continue;
+            }
 
-            queue.push_back((x, y));
+            queue.push_back(i);
+
             let mut count = 0;
-
-            while !queue.is_empty() {
-                let (x, y) = queue.pop_front().unwrap();
-                let value = board.get(x + y * width).unwrap_or(&9);
-                if *value == 9 {
+            while let Some(i) = queue.pop_front() {
+                let value = heightmap[i];
+                if value == 9 {
                     continue;
                 }
 
-                board[x + y * width] = 9;
+                heightmap[i] = 9;
                 count += 1;
 
-                if x > 0 {
-                    queue.push_back((x - 1, y));
-                }
-
-                if x + 1 < width {
-                    queue.push_back((x + 1, y));
-                }
-                if y > 0 {
-                    queue.push_back((x, (y - 1)));
-                }
-
-                if y + 1 < height {
-                    queue.push_back((x, (y + 1)));
-                }
+                heightmap.neighbour_indexes(i, width).iter().for_each(|&i| {
+                    queue.push_back(i);
+                })
             }
 
             counts.push(count);
