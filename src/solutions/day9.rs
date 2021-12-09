@@ -1,40 +1,10 @@
-use crate::helpers::parse_lines;
+use crate::helpers::*;
 use crate::solutions::{Result, Solution};
 use std::collections::VecDeque;
 use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
-
-trait VecMap {
-    fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize>;
-}
-
-impl<T> VecMap for Vec<T> {
-    fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize> {
-        let x = index % width;
-        let y = index / width;
-
-        let mut result = vec![];
-        if x > 0 {
-            result.push(x - 1 + y * width);
-        }
-
-        if y > 0 {
-            result.push(x + (y - 1) * width);
-        }
-
-        if (x + 1) < width {
-            result.push(x + 1 + y * width);
-        }
-
-        if (x + (y + 1) * width) < self.len() {
-            result.push(x + (y + 1) * width);
-        }
-
-        result
-    }
-}
 
 impl DaySolution {}
 
@@ -90,20 +60,24 @@ impl Solution for DaySolution {
 
             let mut count = 0;
             while let Some(i) = queue.pop_front() {
-                let value = heightmap[i];
-                if value == 9 {
+                if heightmap[i] == 9 {
                     continue;
                 }
 
                 heightmap[i] = 9;
                 count += 1;
 
-                heightmap.neighbour_indexes(i, width).iter().for_each(|&i| {
-                    queue.push_back(i);
-                })
+                queue.extend(
+                    heightmap
+                        .neighbour_indexes(i, width)
+                        .into_iter()
+                        .filter(|&i| heightmap[i] < 9),
+                );
             }
 
-            counts.push(count);
+            if count > 0 {
+                counts.push(count);
+            }
         }
 
         counts.sort_unstable();
