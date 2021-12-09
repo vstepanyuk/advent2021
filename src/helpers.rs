@@ -8,18 +8,13 @@ pub fn parse_lines<T: FromStr>(input: Option<String>) -> Vec<T> {
         .collect()
 }
 
-pub trait VecAsMatrix<T>
-where
-    T: Clone,
-{
+pub trait VecAsMatrix<T> {
     fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize>;
-    fn neighbours(&self, index: usize, width: usize) -> Vec<T>;
+    fn neighbours(&self, index: usize, width: usize) -> Vec<&T>;
+    fn at_position(&self, x: i32, y: i32, width: usize) -> Option<&T>;
 }
 
-impl<T> VecAsMatrix<T> for [T]
-where
-    T: Clone,
-{
+impl<T> VecAsMatrix<T> for [T] {
     fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize> {
         let x = index % width;
         let y = index / width;
@@ -44,10 +39,20 @@ where
         result
     }
 
-    fn neighbours(&self, index: usize, width: usize) -> Vec<T> {
+    fn neighbours(&self, index: usize, width: usize) -> Vec<&T> {
         self.neighbour_indexes(index, width)
             .iter()
-            .map(|&index| self[index].clone())
+            .map(|&index| &self[index])
             .collect()
+    }
+
+    fn at_position(&self, x: i32, y: i32, width: usize) -> Option<&T> {
+        let index = x + y * width as i32;
+
+        if index < 0 || index >= self.len() as i32 {
+            return None;
+        }
+
+        Some(&self[index as usize])
     }
 }
