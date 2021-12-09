@@ -27,10 +27,6 @@ impl Solution for DaySolution {
 
             board.extend(value);
         }
-        let mut sum = 0;
-
-        let mut len = board.len();
-
         let mut result = vec![];
 
         for x in 0..board.len() {
@@ -45,14 +41,10 @@ impl Solution for DaySolution {
 
             if v < l && v < r && v < t && v < b {
                 result.push(*v + 1);
-                println!("({}, {}) [{}] {} {} {} {}", x, y, v, l, r, t, b);
             }
         }
-        println!("{:?}", result);
 
-        sum = result.iter().sum::<i32>();
-
-        Ok(Box::new(sum))
+        Ok(Box::new(result.iter().sum::<i32>()))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
@@ -70,8 +62,6 @@ impl Solution for DaySolution {
             board.extend(value);
         }
         let height = board.len() / width;
-        println!("{} x {}", width, height);
-
         let mut points: Vec<(usize, usize)> = vec![];
 
         for x in 0..board.len() {
@@ -90,12 +80,10 @@ impl Solution for DaySolution {
         }
 
         let mut counts: Vec<i32> = vec![];
+        let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
 
         for point in points.iter() {
             let (x, y) = point;
-
-            // let mut board = board.clone();
-            let mut queue: VecDeque<(usize, usize)> = VecDeque::new();
 
             queue.push_back((*x, *y));
             let mut count = 0;
@@ -110,23 +98,18 @@ impl Solution for DaySolution {
                 board[x + y * width] = 9;
                 count += 1;
 
-                let l = board.get(x - 1 + y * width).unwrap_or(&9);
-                let r = board.get(x + 1 + y * width).unwrap_or(&9);
-                let t = board.get(x + (y - 1) * width).unwrap_or(&9);
-                let b = board.get(x + (y + 1) * width).unwrap_or(&9);
-
-                if (x > 0) {
+                if x > 0 {
                     queue.push_back((x - 1, y));
                 }
 
-                if (x + 1 < width) {
+                if x + 1 < width {
                     queue.push_back((x + 1, y));
                 }
-                if (y > 0) {
+                if y > 0 {
                     queue.push_back((x, (y - 1)));
                 }
 
-                if (y + 1 < height) {
+                if y + 1 < height {
                     queue.push_back((x, (y + 1)));
                 }
             }
@@ -135,23 +118,8 @@ impl Solution for DaySolution {
         }
 
         counts.sort();
-        counts.reverse();
 
-        println!("{:?}", counts[0] * counts[1] * counts[2]);
-
-        let mut sum = 0;
-
-        Ok(Box::new(sum))
-    }
-}
-
-fn debug(v: &Vec<i32>, width: usize) {
-    let height = v.len() / width;
-    for y in 0..height {
-        for x in 0..width {
-            print!("{} ", v[x + y * width]);
-        }
-        println!();
+        Ok(Box::new(counts.iter().rev().take(3).product::<i32>()))
     }
 }
 
