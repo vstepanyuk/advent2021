@@ -6,14 +6,11 @@ use std::fmt::Display;
 #[derive(Default)]
 pub struct DaySolution;
 
-trait VecMap<T: Clone> {
+trait VecMap {
     fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize>;
 }
 
-impl<T> VecMap<T> for Vec<T>
-where
-    T: Clone,
-{
+impl<T> VecMap for Vec<T> {
     fn neighbour_indexes(&self, index: usize, width: usize) -> Vec<usize> {
         let x = index % width;
         let y = index / width;
@@ -109,7 +106,7 @@ impl Solution for DaySolution {
             counts.push(count);
         }
 
-        counts.sort();
+        counts.sort_unstable();
 
         Ok(Box::new(counts.iter().rev().take(3).product::<i32>()))
     }
