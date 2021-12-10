@@ -10,31 +10,19 @@ impl DaySolution {
     fn validate(&self, s: &str) -> Option<char> {
         let mut stack: VecDeque<char> = VecDeque::new();
 
-        let is_debug = s == "{([(<{}[<>[]}>{[]{[(<()>";
-
         for ch in s.chars() {
-            // if is_debug {
-            // println!("{:?}", stack);
-            // }
-
             if ch == '(' || ch == '[' || ch == '<' || ch == '{' {
                 stack.push_front(ch);
-            } else {
-                if let Some(value) = stack.pop_front() {
-                    // if is_debug {
-                    // println!("{} = {}", value, ch);
-                    // }
-
-                    match value {
-                        '[' if ch != ']' => return Some(ch),
-                        '(' if ch != ')' => return Some(ch),
-                        '<' if ch != '>' => return Some(ch),
-                        '{' if ch != '}' => return Some(ch),
-                        _ => continue,
-                    }
-                } else {
-                    return Some(ch);
+            } else if let Some(value) = stack.pop_front() {
+                match value {
+                    '[' if ch != ']' => return Some(ch),
+                    '(' if ch != ')' => return Some(ch),
+                    '<' if ch != '>' => return Some(ch),
+                    '{' if ch != '}' => return Some(ch),
+                    _ => continue,
                 }
+            } else {
+                return Some(ch);
             }
         }
 
@@ -44,13 +32,7 @@ impl DaySolution {
     fn complete(&self, s: &str) -> VecDeque<char> {
         let mut stack: VecDeque<char> = VecDeque::new();
 
-        // let is_debug = s == "{([(<{}[<>[]}>{[]{[(<()>";
-
         for ch in s.chars() {
-            // if is_debug {
-            // println!("{:?}", stack);
-            // }
-
             if ch == '(' || ch == '[' || ch == '<' || ch == '{' {
                 stack.push_front(ch);
             } else {
@@ -73,7 +55,6 @@ impl Solution for DaySolution {
         let mut result = 0;
 
         for line in lines {
-            println!("{}", line);
             if let Some(ch) = self.validate(&line) {
                 result += match ch {
                     ')' => 3,
@@ -93,14 +74,14 @@ impl Solution for DaySolution {
 
         let mut scores = vec![];
         for line in lines {
-            if let Some(ch) = self.validate(&line) {
+            if self.validate(&line).is_some() {
                 continue;
             }
 
             let mut result: i64 = 0;
-            let mut a = self.complete(&line);
-            while !a.is_empty() {
-                let ch = a.pop_front().unwrap();
+            let mut stack = self.complete(&line);
+            while !stack.is_empty() {
+                let ch = stack.pop_front().unwrap();
                 result = result * 5
                     + match ch {
                         '(' => 1,
@@ -118,28 +99,28 @@ impl Solution for DaySolution {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::day10::DaySolution;
-//     use crate::Solution;
-//
-//     #[test]
-//     fn part_1() {
-//         let input = include_str!("../../inputs/day10_demo.txt");
-//         let result = DaySolution::default()
-//             .part_1(Some(input.to_string()))
-//             .unwrap();
-//
-//         assert_eq!("", result.to_string())
-//     }
-//
-//     #[test]
-//     fn part_2() {
-//         let input = include_str!("../../inputs/day10_demo.txt");
-//         let result = DaySolution::default()
-//             .part_2(Some(input.to_string()))
-//             .unwrap();
-//
-//         assert_eq!("", result.to_string())
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use crate::day10::DaySolution;
+    use crate::Solution;
+
+    #[test]
+    fn part_1() {
+        let input = include_str!("../../inputs/day10_demo.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("26397", result.to_string())
+    }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day10_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("288957", result.to_string())
+    }
+}
