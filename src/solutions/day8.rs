@@ -32,9 +32,8 @@ impl Solution for DaySolution {
                 s.split_once(" | ")
                     .unwrap()
                     .1
-                    .split(' ')
-                    .map(|s| s.len())
-                    .filter(|l| [2, 3, 4, 7].contains(l))
+                    .split_ascii_whitespace()
+                    .filter(|s| matches!(s.len(), 2 | 3 | 4 | 7))
                     .count()
             })
             .sum::<usize>();
