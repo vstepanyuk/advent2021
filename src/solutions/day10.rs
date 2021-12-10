@@ -3,6 +3,7 @@ use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
 use std::collections::VecDeque;
 use std::fmt::Display;
+use std::str::FromStr;
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -13,31 +14,35 @@ enum Route {
     Valid,
 }
 
-impl DaySolution {
-    fn parse_route(&self, s: &str) -> Route {
+impl FromStr for Route {
+    type Err = ();
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let mut stack: VecDeque<char> = VecDeque::new();
 
         for ch in s.chars() {
             if ch == '(' || ch == '[' || ch == '<' || ch == '{' {
                 stack.push_front(ch);
             } else if let Some(value) = stack.pop_front() {
-                match value {
-                    '[' if ch != ']' => return Route::Invalid(ch),
-                    '(' if ch != ')' => return Route::Invalid(ch),
-                    '<' if ch != '>' => return Route::Invalid(ch),
-                    '{' if ch != '}' => return Route::Invalid(ch),
+                let route = match value {
+                    '[' if ch != ']' => Route::Invalid(ch),
+                    '(' if ch != ')' => Route::Invalid(ch),
+                    '<' if ch != '>' => Route::Invalid(ch),
+                    '{' if ch != '}' => Route::Invalid(ch),
                     _ => continue,
-                }
+                };
+
+                return Ok(route);
             } else {
-                return Route::Invalid(ch);
+                return Ok(Route::Invalid(ch));
             }
         }
 
         if !stack.is_empty() {
-            return Incomplete(stack);
+            return Ok(Incomplete(stack));
         }
 
-        Valid
+        Ok(Valid)
     }
 }
 
@@ -47,9 +52,9 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let result = parse_lines::<String>(input)
+        let result = parse_lines::<Route>(input)
             .iter()
-            .map(|line| match self.parse_route(line) {
+            .map(|route| match route {
                 Route::Invalid(ch) => match ch {
                     ')' => 3,
                     ']' => 57,
@@ -65,9 +70,9 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let mut scores = parse_lines::<String>(input)
+        let mut scores = parse_lines::<Route>(input)
             .iter()
-            .filter_map(|line| match self.parse_route(line) {
+            .filter_map(|route| match route {
                 Route::Incomplete(stack) => Some(stack),
                 _ => None,
             })
