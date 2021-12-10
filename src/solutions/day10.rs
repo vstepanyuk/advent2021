@@ -71,22 +71,17 @@ impl Solution for DaySolution {
                 Route::Incomplete(stack) => Some(stack),
                 _ => None,
             })
-            .map(|mut stack| {
-                let mut result = 0;
-
-                while !stack.is_empty() {
-                    let ch = stack.pop_front().unwrap();
-                    result = result * 5
+            .map(|stack| {
+                stack.iter().fold(0, |acc, ch| {
+                    acc * 5
                         + match ch {
                             '(' => 1,
                             '[' => 2,
                             '{' => 3,
                             '<' => 4,
-                            _ => unreachable!(),
-                        };
-                }
-
-                result
+                            _ => 0,
+                        }
+                })
             })
             .collect::<Vec<u64>>();
 
