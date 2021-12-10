@@ -28,15 +28,9 @@ impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let result = parse_lines::<String>(input)
             .iter()
-            .map(|s| {
-                s.split_once(" | ")
-                    .unwrap()
-                    .1
-                    .split_ascii_whitespace()
-                    .filter(|s| matches!(s.len(), 2 | 3 | 4 | 7))
-                    .count()
-            })
-            .sum::<usize>();
+            .flat_map(|s| s.split_once(" | ").unwrap().1.split_ascii_whitespace())
+            .filter(|s| matches!(s.len(), 2 | 3 | 4 | 7))
+            .count();
 
         Ok(Box::new(result))
     }
