@@ -1,3 +1,4 @@
+use crate::day10::Route::{Incomplete, Valid};
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
 use std::collections::VecDeque;
@@ -6,8 +7,14 @@ use std::fmt::Display;
 #[derive(Default)]
 pub struct DaySolution;
 
+enum Route {
+    Invalid(char),
+    Incomplete(VecDeque<char>),
+    Valid,
+}
+
 impl DaySolution {
-    fn validate(&self, s: &str) -> Option<char> {
+    fn parse_route(&self, s: &str) -> Route {
         let mut stack: VecDeque<char> = VecDeque::new();
 
         for ch in s.chars() {
@@ -15,32 +22,22 @@ impl DaySolution {
                 stack.push_front(ch);
             } else if let Some(value) = stack.pop_front() {
                 match value {
-                    '[' if ch != ']' => return Some(ch),
-                    '(' if ch != ')' => return Some(ch),
-                    '<' if ch != '>' => return Some(ch),
-                    '{' if ch != '}' => return Some(ch),
+                    '[' if ch != ']' => return Route::Invalid(ch),
+                    '(' if ch != ')' => return Route::Invalid(ch),
+                    '<' if ch != '>' => return Route::Invalid(ch),
+                    '{' if ch != '}' => return Route::Invalid(ch),
                     _ => continue,
                 }
             } else {
-                return Some(ch);
+                return Route::Invalid(ch);
             }
         }
 
-        None
-    }
-
-    fn incomplete(&self, s: &str) -> VecDeque<char> {
-        let mut stack: VecDeque<char> = VecDeque::new();
-
-        for ch in s.chars() {
-            if ch == '(' || ch == '[' || ch == '<' || ch == '{' {
-                stack.push_front(ch);
-            } else {
-                stack.pop_front();
-            }
+        if !stack.is_empty() {
+            return Incomplete(stack);
         }
 
-        stack
+        Valid
     }
 }
 
@@ -50,51 +47,51 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let lines: Vec<String> = parse_lines(input);
-
-        let mut result = 0;
-
-        for line in lines {
-            if let Some(ch) = self.validate(&line) {
-                result += match ch {
+        let result = parse_lines::<String>(input)
+            .iter()
+            .map(|line| match self.parse_route(line) {
+                Route::Invalid(ch) => match ch {
                     ')' => 3,
                     ']' => 57,
                     '}' => 1197,
                     '>' => 25137,
                     _ => 0,
-                };
-            }
-        }
+                },
+                _ => 0,
+            })
+            .sum::<u64>();
 
         Ok(Box::new(result))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let lines: Vec<String> = parse_lines(input);
+        let mut scores = parse_lines::<String>(input)
+            .iter()
+            .filter_map(|line| match self.parse_route(line) {
+                Route::Incomplete(stack) => Some(stack),
+                _ => None,
+            })
+            .map(|mut stack| {
+                let mut result = 0;
 
-        let mut scores = vec![];
-        for line in lines {
-            if self.validate(&line).is_some() {
-                continue;
-            }
+                while !stack.is_empty() {
+                    let ch = stack.pop_front().unwrap();
+                    result = result * 5
+                        + match ch {
+                            '(' => 1,
+                            '[' => 2,
+                            '{' => 3,
+                            '<' => 4,
+                            _ => unreachable!(),
+                        };
+                }
 
-            let mut result: i64 = 0;
-            let mut stack = self.incomplete(&line);
-            while !stack.is_empty() {
-                let ch = stack.pop_front().unwrap();
-                result = result * 5
-                    + match ch {
-                        '(' => 1,
-                        '[' => 2,
-                        '{' => 3,
-                        '<' => 4,
-                        _ => unreachable!(),
-                    };
-            }
-            scores.push(result);
-        }
+                result
+            })
+            .collect::<Vec<u64>>();
 
         scores.sort_unstable();
+
         Ok(Box::new(scores[scores.len() / 2]))
     }
 }
