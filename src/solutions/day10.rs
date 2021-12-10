@@ -29,7 +29,7 @@ impl DaySolution {
         None
     }
 
-    fn complete(&self, s: &str) -> VecDeque<char> {
+    fn incomplete(&self, s: &str) -> VecDeque<char> {
         let mut stack: VecDeque<char> = VecDeque::new();
 
         for ch in s.chars() {
@@ -79,7 +79,7 @@ impl Solution for DaySolution {
             }
 
             let mut result: i64 = 0;
-            let mut stack = self.complete(&line);
+            let mut stack = self.incomplete(&line);
             while !stack.is_empty() {
                 let ch = stack.pop_front().unwrap();
                 result = result * 5
