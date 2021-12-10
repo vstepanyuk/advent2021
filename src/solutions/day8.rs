@@ -46,7 +46,7 @@ impl Solution for DaySolution {
             .iter()
             .map(|s| {
                 s.split(" | ")
-                    .map(|s| s.split(' ').map(|s| s.to_bin()).collect())
+                    .map(|s| s.split_ascii_whitespace().map(|s| s.to_bin()).collect())
                     .collect()
             })
             .collect::<Vec<Vec<Vec<u8>>>>();
