@@ -8,6 +8,10 @@ pub struct Matrix<T> {
 }
 
 impl<T> Matrix<T> {
+    pub fn size(&self) -> usize {
+        self.width * self.height
+    }
+
     #[allow(dead_code)]
     pub fn iter(&self) -> impl Iterator<Item = (&T, (usize, usize))> {
         self.data.iter().enumerate().map(|(index, value)| {
@@ -17,9 +21,7 @@ impl<T> Matrix<T> {
             (value, (x, y))
         })
     }
-}
 
-impl<T> Matrix<T> {
     #[allow(dead_code)]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (&mut T, (usize, usize))> {
         self.data.iter_mut().enumerate().map(|(index, value)| {
@@ -38,8 +40,8 @@ impl<T: Debug + Default> Debug for Matrix<T> {
         for y in 0..self.height {
             for x in 0..self.width {
                 match self.get(x, y) {
-                    Some(x) => write!(f, "{:?}", x)?,
-                    None => write!(f, " ")?,
+                    Some(x) => write!(f, "{:?}\t", x)?,
+                    None => write!(f, " \t")?,
                 };
             }
             writeln!(f)?;
@@ -49,13 +51,36 @@ impl<T: Debug + Default> Debug for Matrix<T> {
     }
 }
 
-impl<T: Default> Matrix<T> {
+impl<T> Matrix<T> {
     #[allow(dead_code)]
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(width: usize, height: usize) -> Matrix<T>
+    where
+        T: Default,
+    {
+        let mut data = Vec::new();
+        data.resize_with(width * height, T::default);
+
         Self {
             width,
             height,
-            data: Vec::from_iter((0..width * height).map(|_| T::default())),
+            data,
+        }
+    }
+
+    pub fn from_iter<'a>(iter: impl Iterator<Item = &'a T>, width: usize) -> Matrix<T>
+    where
+        T: 'a + Default + Copy,
+    {
+        let mut data: Vec<T> = iter.map(|&elem| elem.clone()).collect();
+        let mut height = data.len() / width;
+        height += (width * height < data.len()).then(|| 1).unwrap_or(0);
+
+        data.resize_with(width * height, T::default);
+
+        Self {
+            width,
+            height,
+            data,
         }
     }
 
@@ -201,5 +226,14 @@ mod tests {
             .to_vec(),
             result
         );
+    }
+
+    #[test]
+    fn matrix_from_iter() {
+        let v: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7];
+        let matrix = Matrix::<u8>::from_iter(v.iter(), 3);
+
+        let v: Vec<_> = matrix.iter().map(|(&v, _)| v).collect();
+        assert_eq!(v, vec![1, 2, 3, 4, 5, 6, 7, 0, 0]);
     }
 }

@@ -59,23 +59,19 @@ impl Solution for DaySolution {
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let mut matrix = Matrix::<i32>::from(&input.unwrap()).unwrap();
+        let result = (0..100).map(|_| self.step(&mut matrix)).sum::<usize>();
 
-        let mut c = 0;
-        for _ in 0..100 {
-            c += self.step(&mut matrix);
-        }
-
-        Ok(Box::new(c))
+        Ok(Box::new(result))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let mut matrix = Matrix::<i32>::from(&input.unwrap()).unwrap();
 
-        let mut c = 0;
-        while self.step(&mut matrix) != matrix.width * matrix.height {
-            c += 1;
-        }
-        Ok(Box::new(c + 1))
+        let result = std::iter::repeat(1)
+            .take_while(|_| self.step(&mut matrix) != matrix.size())
+            .sum::<usize>();
+
+        Ok(Box::new(result + 1))
     }
 }
 
