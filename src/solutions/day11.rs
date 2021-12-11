@@ -1,7 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 use std::fmt::Display;
 
-use crate::helpers::*;
+use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
@@ -11,16 +11,10 @@ impl DaySolution {
     fn step(&self, matrix: &mut Matrix<i32>) -> usize {
         let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
 
-        for y in 0..matrix.height {
-            for x in 0..matrix.width {
-                let energy = *matrix.get(x, y).unwrap();
-                matrix.set(x, y, energy + 1);
-
-                if (energy + 1) > 9 {
-                    queue.push_back((x as i32, y as i32));
-                }
-            }
-        }
+        queue.extend(matrix.iter_mut().filter_map(|(energy, (x, y))| {
+            *energy += 1;
+            (*energy > 9).then(|| (x as i32, y as i32))
+        }));
 
         let offsets = [
             (-1, 0),
@@ -40,29 +34,19 @@ impl DaySolution {
             }
 
             visited.insert((x, y));
-            for offset in offsets {
-                let (x, y) = (x + offset.0, y + offset.1);
-                let energy = if let Some(&energy) = matrix.get(x, y) {
-                    energy
-                } else {
-                    continue;
-                };
-                matrix.set(x, y, energy + 1);
-                if (energy + 1) > 9 {
-                    queue.push_back((x, y))
-                }
-            }
+            queue.extend(offsets.iter().filter_map(|(dx, dy)| {
+                matrix.get_mut(x + dx, y + dy).and_then(|energy| {
+                    *energy += 1;
+                    (*energy > 9).then(|| (x + dx, y + dy))
+                })
+            }));
         }
 
-        for x in 0..matrix.width {
-            for y in 0..matrix.height {
-                let energy = matrix.get(x, y).unwrap();
-
-                if *energy > 9 {
-                    matrix.set(x, y, 0);
-                }
+        matrix.iter_mut().for_each(|(energy, _)| {
+            if *energy > 9 {
+                *energy = 0;
             }
-        }
+        });
 
         visited.len()
     }

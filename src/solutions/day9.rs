@@ -1,4 +1,5 @@
 use crate::helpers::*;
+use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
 use std::collections::VecDeque;
 use std::fmt::Display;

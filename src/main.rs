@@ -5,6 +5,7 @@ use clap::{App, AppSettings, Arg, SubCommand};
 use solutions::*;
 
 mod helpers;
+mod matrix;
 mod solutions;
 
 macro_rules! solutions {
