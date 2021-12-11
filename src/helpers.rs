@@ -22,8 +22,8 @@ impl<T: Debug + Default> Debug for Matrix<T> {
         for y in 0..self.height {
             for x in 0..self.width {
                 match self.get(x, y) {
-                    Some(x) => write!(f, "{:?}\t", x)?,
-                    None => write!(f, " \t")?,
+                    Some(x) => write!(f, "{:?}", x)?,
+                    None => write!(f, " ")?,
                 };
             }
             writeln!(f)?;
