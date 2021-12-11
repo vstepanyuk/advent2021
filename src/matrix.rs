@@ -67,11 +67,12 @@ impl<T> Matrix<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn from_iter<'a>(iter: impl Iterator<Item = &'a T>, width: usize) -> Matrix<T>
     where
         T: 'a + Default + Copy,
     {
-        let mut data: Vec<T> = iter.map(|&elem| elem.clone()).collect();
+        let mut data: Vec<T> = iter.copied().collect();
         let mut height = data.len() / width;
         height += (width * height < data.len()).then(|| 1).unwrap_or(0);
 
