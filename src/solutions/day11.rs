@@ -27,13 +27,13 @@ impl DaySolution {
             (1, -1),
         ];
 
-        let mut visited = HashSet::new();
+        let mut flashed = HashSet::new();
         while let Some((x, y)) = queue.pop_front() {
-            if visited.contains(&(x, y)) {
+            if flashed.contains(&(x, y)) {
                 continue;
             }
 
-            visited.insert((x, y));
+            flashed.insert((x, y));
             queue.extend(offsets.iter().filter_map(|(dx, dy)| {
                 matrix.get_mut(x + dx, y + dy).and_then(|energy| {
                     *energy += 1;
@@ -48,7 +48,7 @@ impl DaySolution {
             }
         });
 
-        visited.len()
+        flashed.len()
     }
 }
 
