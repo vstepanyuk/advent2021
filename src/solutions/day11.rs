@@ -1,7 +1,8 @@
-use crate::helpers::*;
-use crate::solutions::{Result, Solution};
 use std::collections::{HashSet, VecDeque};
 use std::fmt::Display;
+
+use crate::helpers::*;
+use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
 pub struct DaySolution {}
@@ -33,29 +34,22 @@ impl DaySolution {
         ];
 
         let mut visited = HashSet::new();
-        while let Some(pos) = q.pop_front() {
-            if visited.contains(&pos) {
+        while let Some((x, y)) = q.pop_front() {
+            if visited.contains(&(x, y)) {
                 continue;
             }
 
-            visited.insert(pos);
-            let (x, y) = pos;
-            for o in offsets {
-                let xx = x + o.0;
-                let yy = y + o.1;
-                if xx < 0
-                    || (xx as usize) >= matrix.width
-                    || yy < 0
-                    || (yy as usize) >= matrix.height
-                {
+            visited.insert((x, y));
+            for offset in offsets {
+                let (x, y) = (x + offset.0, y + offset.1);
+                let value = if let Some(&value) = matrix.get(x, y) {
+                    value
+                } else {
                     continue;
-                }
-
-                let v = *matrix.get(xx, yy).unwrap();
-
-                matrix.set(xx, yy, v + 1);
-                if (v + 1) > 9 {
-                    q.push_back((xx, yy))
+                };
+                matrix.set(x, y, value + 1);
+                if (value + 1) > 9 {
+                    q.push_back((x, y))
                 }
             }
         }
@@ -83,9 +77,8 @@ impl Solution for DaySolution {
         let mut matrix = Matrix::<i32>::from(&input.unwrap()).unwrap();
 
         let mut c = 0;
-        for step in 0..100 {
+        for _ in 0..100 {
             c += self.step(&mut matrix);
-            println!("{:?}", matrix);
         }
 
         Ok(Box::new(c))

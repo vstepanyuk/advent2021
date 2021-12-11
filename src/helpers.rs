@@ -47,13 +47,13 @@ impl<T: Default> Matrix<T> {
     where
         P: TryInto<i32>,
     {
-        let position = x.try_into().ok().unwrap() + y.try_into().ok().unwrap() * self.width as i32;
-
-        if position < 0 || position >= self.data.len() as i32 {
-            None
-        } else {
-            Some(position as usize)
+        let x = x.try_into().ok().unwrap();
+        let y = y.try_into().ok().unwrap();
+        if x < 0 || x as usize >= self.width || y < 0 || y as usize >= self.height {
+            return None;
         }
+        let position = x + y * self.width as i32;
+        Some(position as usize)
     }
 
     pub fn get<P>(&self, x: P, y: P) -> Option<&T>
