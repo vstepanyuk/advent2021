@@ -7,13 +7,8 @@ pub struct Matrix<T> {
     pub(crate) data: Vec<T>,
 }
 
-pub struct MatrixIter<'a, T> {
-    data: &'a [T],
-    index: usize,
-    width: usize,
-}
-
 impl<T> Matrix<T> {
+    #[allow(dead_code)]
     pub fn iter(&self) -> impl Iterator<Item = (&T, (usize, usize))> {
         self.data.iter().enumerate().map(|(index, value)| {
             let x = index % self.width;
@@ -25,6 +20,7 @@ impl<T> Matrix<T> {
 }
 
 impl<'a, T: 'a> Matrix<T> {
+    #[allow(dead_code)]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (&mut T, (usize, usize))> {
         self.data.iter_mut().enumerate().map(|(index, value)| {
             let x = index % self.width;
