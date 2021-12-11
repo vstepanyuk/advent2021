@@ -9,15 +9,15 @@ pub struct DaySolution {}
 
 impl DaySolution {
     fn step(&self, matrix: &mut Matrix<i32>) -> usize {
-        let mut q: VecDeque<(i32, i32)> = VecDeque::new();
+        let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
 
         for y in 0..matrix.height {
             for x in 0..matrix.width {
-                let v = *matrix.get(x, y).unwrap();
-                matrix.set(x, y, v + 1);
+                let energy = *matrix.get(x, y).unwrap();
+                matrix.set(x, y, energy + 1);
 
-                if (v + 1) > 9 {
-                    q.push_back((x as i32, y as i32));
+                if (energy + 1) > 9 {
+                    queue.push_back((x as i32, y as i32));
                 }
             }
         }
@@ -34,7 +34,7 @@ impl DaySolution {
         ];
 
         let mut visited = HashSet::new();
-        while let Some((x, y)) = q.pop_front() {
+        while let Some((x, y)) = queue.pop_front() {
             if visited.contains(&(x, y)) {
                 continue;
             }
@@ -42,23 +42,23 @@ impl DaySolution {
             visited.insert((x, y));
             for offset in offsets {
                 let (x, y) = (x + offset.0, y + offset.1);
-                let value = if let Some(&value) = matrix.get(x, y) {
-                    value
+                let energy = if let Some(&energy) = matrix.get(x, y) {
+                    energy
                 } else {
                     continue;
                 };
-                matrix.set(x, y, value + 1);
-                if (value + 1) > 9 {
-                    q.push_back((x, y))
+                matrix.set(x, y, energy + 1);
+                if (energy + 1) > 9 {
+                    queue.push_back((x, y))
                 }
             }
         }
 
         for x in 0..matrix.width {
             for y in 0..matrix.height {
-                let v = matrix.get(x, y).unwrap();
+                let energy = matrix.get(x, y).unwrap();
 
-                if *v > 9 {
+                if *energy > 9 {
                     matrix.set(x, y, 0);
                 }
             }
