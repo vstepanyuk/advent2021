@@ -19,7 +19,7 @@ impl<T> Matrix<T> {
     }
 }
 
-impl<'a, T: 'a> Matrix<T> {
+impl<T> Matrix<T> {
     #[allow(dead_code)]
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (&mut T, (usize, usize))> {
         self.data.iter_mut().enumerate().map(|(index, value)| {
