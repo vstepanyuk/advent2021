@@ -1,44 +1,38 @@
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::fmt::Display;
+use std::hash::Hash;
+
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
-use std::collections::{HashMap, VecDeque};
-use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
 
-trait StringExtras {
-    fn is_lowercase(&self) -> bool;
+#[derive(Clone, Eq, PartialEq, Hash)]
+struct Node {
+    name: String,
+    is_lowercase: bool,
 }
 
-impl StringExtras for str {
-    fn is_lowercase(&self) -> bool {
-        self.chars().all(|ch| ch.is_lowercase())
-    }
-}
-
-trait VecExtras<T> {
-    fn occurrences(&self, elem: &T) -> usize;
-}
-
-impl<T> VecExtras<T> for [T]
-where
-    T: PartialEq,
-{
-    fn occurrences(&self, elem: &T) -> usize {
-        self.iter().filter(|&current| current == elem).count()
+impl Node {
+    fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            is_lowercase: name.chars().all(|ch| ch.is_lowercase()),
+        }
     }
 }
 
 impl DaySolution {
-    fn parse(&self, input: Option<String>) -> HashMap<String, Vec<String>> {
+    fn parse(&self, input: Option<String>) -> HashMap<Node, Vec<Node>> {
         let lines = parse_lines::<String>(input);
-        let mut graph = HashMap::<String, Vec<String>>::new();
+        let mut graph = HashMap::<_, Vec<_>>::new();
 
         for line in lines {
             let (from, to) = line.split_once('-').unwrap();
 
-            let from = from.to_string();
-            let to = to.to_string();
+            let from = Node::new(from);
+            let to = Node::new(to);
 
             graph
                 .entry(from.clone())
@@ -46,32 +40,32 @@ impl DaySolution {
                 .push(to.clone());
             graph.entry(to).or_insert_with(Vec::new).push(from);
         }
-        graph.insert("end".to_string(), vec![]);
+
         graph
     }
 
-    fn solve(&self, graph: &HashMap<String, Vec<String>>, count_twice: bool) -> usize {
+    fn solve(&self, graph: &HashMap<Node, Vec<Node>>, count_twice: bool) -> usize {
         let mut count = 0;
-        let mut queue: VecDeque<(Vec<String>, bool)> = VecDeque::new();
-        queue.push_back((vec!["start".to_string()], count_twice));
+        let mut queue: VecDeque<(HashSet<_>, _, bool)> = VecDeque::new();
+        queue.push_back((HashSet::new(), Node::new("start"), count_twice));
 
-        while let Some((path, count_twice)) = queue.pop_front() {
-            let last_node = path.last().unwrap();
-            let to_nodes = graph.get(last_node).unwrap();
+        while let Some((path, last_node, count_twice)) = queue.pop_front() {
+            let to_nodes = graph.get(&last_node).unwrap();
 
             count += to_nodes
                 .iter()
-                .filter(|&node| match node.as_str() {
+                .filter(|&node| match node.name.as_str() {
                     "end" => true,
                     "start" => false,
-                    _ if node.is_lowercase() && !count_twice && path.occurrences(node) > 0 => false,
+                    _ if node.is_lowercase && !count_twice && path.contains(node) => false,
                     _ => {
                         let mut new_path = path.clone();
-                        new_path.push(node.to_owned());
+                        new_path.insert(node.clone());
 
                         queue.push_back((
                             new_path,
-                            count_twice && (!node.is_lowercase() || path.occurrences(node) < 1),
+                            node.to_owned(),
+                            count_twice && (!node.is_lowercase || !path.contains(node)),
                         ));
 
                         false
