@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Display;
-use std::hash::Hash;
 
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
@@ -8,22 +7,13 @@ use crate::solutions::{Result, Solution};
 #[derive(Default)]
 pub struct DaySolution;
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-struct Node {
-    name: String,
-    is_lowercase: bool,
-}
-
-impl Node {
-    fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            is_lowercase: name.chars().all(|ch| ch.is_lowercase()),
-        }
-    }
-}
+type Node = (String, bool);
 
 impl DaySolution {
+    fn node_build(&self, name: &str) -> Node {
+        (name.to_string(), name.chars().all(|ch| ch.is_lowercase()))
+    }
+
     fn parse(&self, input: Option<String>) -> HashMap<Node, Vec<Node>> {
         let lines = parse_lines::<String>(input);
         let mut graph = HashMap::<_, Vec<_>>::new();
@@ -31,8 +21,8 @@ impl DaySolution {
         for line in lines {
             let (from, to) = line.split_once('-').unwrap();
 
-            let from = Node::new(from);
-            let to = Node::new(to);
+            let from = self.node_build(from);
+            let to = self.node_build(to);
 
             graph
                 .entry(from.clone())
@@ -47,17 +37,17 @@ impl DaySolution {
     fn solve(&self, graph: &HashMap<Node, Vec<Node>>, count_twice: bool) -> usize {
         let mut count = 0;
         let mut queue: VecDeque<(HashSet<_>, _, bool)> = VecDeque::new();
-        queue.push_back((HashSet::new(), Node::new("start"), count_twice));
+        queue.push_back((HashSet::new(), self.node_build("start"), count_twice));
 
         while let Some((path, last_node, count_twice)) = queue.pop_front() {
             let to_nodes = graph.get(&last_node).unwrap();
 
             count += to_nodes
                 .iter()
-                .filter(|&node| match node.name.as_str() {
+                .filter(|&node| match node.0.as_str() {
                     "end" => true,
                     "start" => false,
-                    _ if node.is_lowercase && !count_twice && path.contains(node) => false,
+                    _ if node.1 && !count_twice && path.contains(node) => false,
                     _ => {
                         let mut new_path = path.clone();
                         new_path.insert(node.clone());
@@ -65,7 +55,7 @@ impl DaySolution {
                         queue.push_back((
                             new_path,
                             node.to_owned(),
-                            count_twice && (!node.is_lowercase || !path.contains(node)),
+                            count_twice && (!node.1 || !path.contains(node)),
                         ));
 
                         false
