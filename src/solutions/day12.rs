@@ -37,11 +37,13 @@ impl DaySolution {
     fn solve(&self, graph: &HashMap<Node, Vec<Node>>, count_twice: bool) -> usize {
         let mut count = 0;
         let mut queue: VecDeque<(HashSet<_>, _, bool)> = VecDeque::new();
-        queue.push_back((HashSet::new(), self.node_build("start"), count_twice));
+        queue.push_back((
+            HashSet::new(),
+            graph.get(&self.node_build("start")).unwrap(),
+            count_twice,
+        ));
 
-        while let Some((path, last_node, count_twice)) = queue.pop_front() {
-            let to_nodes = graph.get(&last_node).unwrap();
-
+        while let Some((path, to_nodes, count_twice)) = queue.pop_front() {
             count += to_nodes
                 .iter()
                 .filter(|&node| match node.0.as_str() {
@@ -54,7 +56,7 @@ impl DaySolution {
 
                         queue.push_back((
                             new_path,
-                            node.to_owned(),
+                            graph.get(node).unwrap(),
                             count_twice && (!node.1 || !path.contains(node)),
                         ));
 
