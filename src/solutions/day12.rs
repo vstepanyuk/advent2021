@@ -62,9 +62,9 @@ impl DaySolution {
         let mut path = path.to_owned();
         path.push(start.to_string());
 
-        let mut count = 0;
-        for to_node in to_nodes {
-            count += match to_node.as_str() {
+        to_nodes
+            .iter()
+            .map(|to_node| match to_node.as_str() {
                 "start" => 0,
                 "end" => 1,
                 _ if to_node.is_lowercase() && !is_part2 && path.occurrences(to_node) > 0 => 0,
@@ -74,10 +74,8 @@ impl DaySolution {
                     &path,
                     is_part2 && (!to_node.is_lowercase() || path.occurrences(to_node) < 1),
                 ),
-            };
-        }
-
-        count
+            })
+            .sum::<usize>()
     }
 }
 
