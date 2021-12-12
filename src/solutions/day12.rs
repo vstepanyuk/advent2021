@@ -50,7 +50,7 @@ impl DaySolution {
         graph
     }
 
-    fn solve_queue(&self, graph: &HashMap<String, Vec<String>>, count_twice: bool) -> usize {
+    fn solve(&self, graph: &HashMap<String, Vec<String>>, count_twice: bool) -> usize {
         let mut count = 0;
         let mut queue: VecDeque<(Vec<String>, bool)> = VecDeque::new();
         queue.push_back((vec!["start".to_string()], count_twice));
@@ -84,7 +84,7 @@ impl DaySolution {
             }
         }
 
-        return count;
+        count
     }
 }
 
@@ -95,12 +95,12 @@ impl Solution for DaySolution {
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let graph = self.parse(input);
-        Ok(Box::new(self.solve_queue(&graph, false)))
+        Ok(Box::new(self.solve(&graph, false)))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let graph = self.parse(input);
-        Ok(Box::new(self.solve_queue(&graph, true)))
+        Ok(Box::new(self.solve(&graph, true)))
     }
 }
 
