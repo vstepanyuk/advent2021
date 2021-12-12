@@ -59,29 +59,25 @@ impl DaySolution {
             let last_node = path.last().unwrap();
             let to_nodes = graph.get(last_node).unwrap();
 
-            for node in to_nodes.iter() {
-                if node == "start" {
-                    continue;
-                }
-                if node == "end" {
-                    count += 1;
-                    continue;
-                }
+            count += to_nodes
+                .iter()
+                .filter(|&node| match node.as_str() {
+                    "end" => true,
+                    "start" => false,
+                    _ if node.is_lowercase() && !count_twice && path.occurrences(node) > 0 => false,
+                    _ => {
+                        let mut new_path = path.clone();
+                        new_path.push(node.to_owned());
 
-                let is_lowercase = node.is_lowercase();
-                let occurrences = path.occurrences(node);
-                if is_lowercase && !count_twice && occurrences > 0 {
-                    continue;
-                }
+                        queue.push_back((
+                            new_path,
+                            count_twice && (!node.is_lowercase() || path.occurrences(node) < 1),
+                        ));
 
-                let mut new_path = path.clone();
-                new_path.push(node.to_owned());
-
-                queue.push_back((
-                    new_path,
-                    count_twice && (!is_lowercase || path.occurrences(node) < 1),
-                ));
-            }
+                        false
+                    }
+                })
+                .count();
         }
 
         count
