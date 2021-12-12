@@ -1,6 +1,6 @@
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt::Display;
 
 #[derive(Default)]
@@ -50,32 +50,41 @@ impl DaySolution {
         graph
     }
 
-    fn solve(
-        &self,
-        graph: &HashMap<String, Vec<String>>,
-        start: &str,
-        path: &[String],
-        is_part2: bool,
-    ) -> usize {
-        let to_nodes = graph.get(start).unwrap();
+    fn solve_queue(&self, graph: &HashMap<String, Vec<String>>, count_twice: bool) -> usize {
+        let mut count = 0;
+        let mut queue: VecDeque<(Vec<String>, bool)> = VecDeque::new();
+        queue.push_back((vec!["start".to_string()], count_twice));
 
-        let mut path = path.to_owned();
-        path.push(start.to_string());
+        while let Some((path, count_twice)) = queue.pop_front() {
+            let last_node = path.last().unwrap();
+            let to_nodes = graph.get(last_node).unwrap();
 
-        to_nodes
-            .iter()
-            .map(|to_node| match to_node.as_str() {
-                "start" => 0,
-                "end" => 1,
-                _ if to_node.is_lowercase() && !is_part2 && path.occurrences(to_node) > 0 => 0,
-                _ => self.solve(
-                    graph,
-                    to_node,
-                    &path,
-                    is_part2 && (!to_node.is_lowercase() || path.occurrences(to_node) < 1),
-                ),
-            })
-            .sum::<usize>()
+            for node in to_nodes.iter() {
+                if node == "start" {
+                    continue;
+                }
+                if node == "end" {
+                    count += 1;
+                    continue;
+                }
+
+                let is_lowercase = node.is_lowercase();
+                let occurrences = path.occurrences(node);
+                if is_lowercase && !count_twice && occurrences > 0 {
+                    continue;
+                }
+
+                let mut new_path = path.clone();
+                new_path.push(node.to_owned());
+
+                queue.push_back((
+                    new_path,
+                    count_twice && (!is_lowercase || path.occurrences(node) < 1),
+                ));
+            }
+        }
+
+        return count;
     }
 }
 
@@ -86,14 +95,12 @@ impl Solution for DaySolution {
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let graph = self.parse(input);
-        let count = self.solve(&graph, &"start".to_string(), &[], false);
-        Ok(Box::new(count))
+        Ok(Box::new(self.solve_queue(&graph, false)))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let graph = self.parse(input);
-        let count = self.solve(&graph, &"start".to_string(), &[], true);
-        Ok(Box::new(count))
+        Ok(Box::new(self.solve_queue(&graph, true)))
     }
 }
 
