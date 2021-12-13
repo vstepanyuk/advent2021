@@ -29,46 +29,30 @@ impl FromStr for Step {
     }
 }
 
+impl DaySolution {
+    fn solve(&self, input: Option<String>) -> (i32, i32, i32) {
+        parse_lines::<Step>(input)
+            .iter()
+            .fold((0, 0, 0), |(horizontal, depth, aim), step| match step {
+                Step::Forward(value) => (horizontal + value, depth + aim * value, aim),
+                Step::Down(value) => (horizontal, depth, aim + value),
+                Step::Up(value) => (horizontal, depth, aim - value),
+            })
+    }
+}
+
 impl Solution for DaySolution {
     fn new() -> Self {
         Self {}
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let steps: Vec<Step> = parse_lines(input);
-
-        let mut horizontal: i32 = 0;
-        let mut depth: i32 = 0;
-
-        for step in steps {
-            match step {
-                Step::Forward(value) => horizontal += value,
-                Step::Down(value) => depth += value,
-                Step::Up(value) => depth -= value,
-            }
-        }
-
+        let (horizontal, _, depth) = self.solve(input);
         Ok(Box::new(horizontal * depth))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let steps: Vec<Step> = parse_lines(input);
-
-        let mut horizontal: i32 = 0;
-        let mut depth: i32 = 0;
-        let mut aim: i32 = 0;
-
-        for step in steps {
-            match step {
-                Step::Forward(value) => {
-                    horizontal += value;
-                    depth += aim * value;
-                }
-                Step::Down(value) => aim += value,
-                Step::Up(value) => aim -= value,
-            }
-        }
-
+        let (horizontal, depth, _) = self.solve(input);
         Ok(Box::new(horizontal * depth))
     }
 }

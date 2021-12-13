@@ -4,6 +4,7 @@ use crate::solutions::{Result, Solution};
 use std::collections::VecDeque;
 use std::fmt::Display;
 use std::str::FromStr;
+use tap::Tap;
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -70,7 +71,7 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let mut scores = parse_lines::<Route>(input)
+        let scores = parse_lines::<Route>(input)
             .iter()
             .filter_map(|route| match route {
                 Route::Incomplete(stack) => Some(stack),
@@ -88,9 +89,8 @@ impl Solution for DaySolution {
                         }
                 })
             })
-            .collect::<Vec<u64>>();
-
-        scores.sort_unstable();
+            .collect::<Vec<u64>>()
+            .tap_mut(|v| v.sort_unstable());
 
         Ok(Box::new(scores[scores.len() / 2]))
     }

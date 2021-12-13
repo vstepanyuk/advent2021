@@ -11,7 +11,7 @@ trait Digit {
     fn to_bin(&self) -> u8;
 }
 
-impl Digit for &str {
+impl Digit for str {
     fn to_bin(&self) -> u8 {
         ('a'..='g')
             .enumerate()
@@ -40,10 +40,10 @@ impl Solution for DaySolution {
             .iter()
             .map(|s| {
                 s.split(" | ")
-                    .map(|s| s.split_ascii_whitespace().map(|s| s.to_bin()).collect())
+                    .map(|s| s.split_ascii_whitespace().map(Digit::to_bin).collect())
                     .collect()
             })
-            .collect::<Vec<Vec<Vec<u8>>>>();
+            .collect::<Vec<Vec<Vec<_>>>>();
 
         let result = entries
             .iter()
