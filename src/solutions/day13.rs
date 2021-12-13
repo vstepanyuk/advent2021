@@ -143,4 +143,25 @@ mod tests {
 
         assert_eq!("664", result.to_string());
     }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day13_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!(
+            "Matrix(5x7)
+11111
+10001
+10001
+10001
+11111
+00000
+00000
+",
+            result.to_string()
+        );
+    }
 }
