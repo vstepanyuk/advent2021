@@ -105,7 +105,7 @@ impl Solution for DaySolution {
             matrix = matrix.flip(flip);
         });
 
-        let count = matrix.iter().filter(|(v, _)| **v == 1).count();
+        let count = matrix.iter().filter(|(&v, _)| v == 1).count();
         Ok(Box::new(count))
     }
 
