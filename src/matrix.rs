@@ -136,21 +136,21 @@ impl<T> Matrix<T> {
             .filter_map(|(dx, dy)| self.get(x + dx, y + dy))
             .collect()
     }
-    //
-    // pub fn neighbours_pos<P>(&self, x: P, y: P) -> Vec<(usize, usize)>
-    // where
-    //     P: TryInto<i32>,
-    // {
-    //     let x = x.try_into().ok().unwrap();
-    //     let y = y.try_into().ok().unwrap();
-    //     let offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)];
-    //
-    //     offsets
-    //         .iter()
-    //         .filter(|(dx, dy)| self.get_index(x + dx, y + dy).is_some())
-    //         .map(|(dx, dy)| ((x + dx) as usize, (y + dy) as usize))
-    //         .collect()
-    // }
+
+    #[allow(dead_code)]
+    pub fn render_to_string<F>(&self, renderer: F) -> String
+    where
+        F: Fn(Option<&T>) -> String,
+    {
+        let rows = (0..self.height)
+            .map(|y| (0..self.width).map(|x| renderer(self.get(x, y))).collect())
+            .collect::<Vec<Vec<_>>>();
+
+        rows.iter()
+            .map(|row| row.join(""))
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
 }
 
 impl<T: Default + FromStr> Matrix<T> {

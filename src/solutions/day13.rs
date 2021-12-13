@@ -119,7 +119,12 @@ impl Solution for DaySolution {
             matrix = matrix.flip(flip);
         });
 
-        Ok(Box::new(format!("{:?}", matrix)))
+        let result = matrix.render_to_string(|value| match value {
+            Some(&1) => "#".to_string(),
+            _ => ".".to_string(),
+        });
+
+        Ok(Box::new(format!("\n{}", result)))
     }
 }
 
@@ -153,15 +158,30 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            "Matrix(5x7)
-11111
-10001
-10001
-10001
-11111
-00000
-00000
-",
+            "
+#####
+#...#
+#...#
+#...#
+#####
+.....
+.....",
+            result.to_string()
+        );
+
+        let input = include_str!("../../inputs/day13.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!(
+            "
+####.####...##.#..#.####.#....###..#....
+#....#.......#.#.#.....#.#....#..#.#....
+###..###.....#.##.....#..#....###..#....
+#....#.......#.#.#...#...#....#..#.#....
+#....#....#..#.#.#..#....#....#..#.#....
+####.#.....##..#..#.####.####.###..####.",
             result.to_string()
         );
     }
