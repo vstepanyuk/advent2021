@@ -53,10 +53,6 @@ impl DaySolution {
 }
 
 impl Solution for DaySolution {
-    fn new() -> Self {
-        Self {}
-    }
-
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let mut matrix = Matrix::<i32>::from(&input.unwrap()).unwrap();
         let result = (0..100).map(|_| self.step(&mut matrix)).sum::<usize>();

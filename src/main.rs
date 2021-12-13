@@ -9,7 +9,7 @@ mod matrix;
 mod solutions;
 
 macro_rules! solutions {
-    ($( $mod_name:ident ), *) => { vec![$( Box::new($mod_name::DaySolution::new()),)*] };
+    ($( $mod_name:ident ), *) => { vec![$( Box::new($mod_name::DaySolution::default()),)*] };
 }
 
 fn main() -> Result<()> {

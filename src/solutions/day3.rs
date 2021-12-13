@@ -41,10 +41,6 @@ impl DaySolution {
 }
 
 impl Solution for DaySolution {
-    fn new() -> Self {
-        Self {}
-    }
-
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines(input);
         let len = lines.first().map(String::len).unwrap_or(0);

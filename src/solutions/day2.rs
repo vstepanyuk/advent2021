@@ -42,10 +42,6 @@ impl DaySolution {
 }
 
 impl Solution for DaySolution {
-    fn new() -> Self {
-        Self {}
-    }
-
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let (horizontal, _, depth) = self.solve(input);
         Ok(Box::new(horizontal * depth))

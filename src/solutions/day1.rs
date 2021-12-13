@@ -17,10 +17,6 @@ impl DaySolution {
 }
 
 impl Solution for DaySolution {
-    fn new() -> Self {
-        Self {}
-    }
-
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let nums = helpers::parse_lines(input);
 
