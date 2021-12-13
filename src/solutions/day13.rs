@@ -1,10 +1,99 @@
-use crate::helpers::parse_lines;
+use std::fmt::Display;
+
 use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
-use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
+
+#[derive(Debug)]
+enum Flip {
+    Horizontal,
+    Vertical,
+}
+
+trait Flippable<T> {
+    fn flip(&self, axis: &Flip) -> Matrix<T>;
+}
+
+impl<T> Flippable<T> for Matrix<T>
+where
+    T: Default + PartialEq + Copy + PartialOrd,
+{
+    fn flip(&self, axis: &Flip) -> Matrix<T> {
+        let (width, height) = if matches!(axis, Flip::Vertical) {
+            (self.width, self.height / 2)
+        } else {
+            (self.width / 2, self.height)
+        };
+
+        let mut new_matrix: Matrix<T> = Matrix::new(width, height);
+
+        for y in 0..height {
+            for x in 0..width {
+                let (xx, yy) = match axis {
+                    Flip::Horizontal => (self.width - x - 1, y),
+                    Flip::Vertical => (x, self.height - y - 1),
+                };
+
+                let value1 = *self.get(x, y).unwrap();
+                new_matrix.set(x, y, value1);
+
+                let value2 = *self.get(xx, yy).unwrap();
+                if value1 < value2 {
+                    new_matrix.set(x, y, value2);
+                }
+            }
+        }
+
+        new_matrix
+    }
+}
+
+impl DaySolution {
+    fn parse(&self, input: Option<String>) -> (Matrix<u8>, Vec<Flip>) {
+        let input = input.unwrap();
+
+        let mut width = 0;
+        let mut height = 0;
+
+        let points = input
+            .lines()
+            .take_while(|&line| !line.is_empty())
+            .map(|line| {
+                let (x, y) = line.split_once(",").unwrap();
+                let (x, y) = (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap());
+
+                if x > width {
+                    width = x;
+                }
+
+                if y > height {
+                    height = y;
+                }
+
+                (x, y)
+            })
+            .collect::<Vec<_>>();
+
+        let flips = input
+            .lines()
+            .skip_while(|&line| !line.is_empty())
+            .skip(1)
+            .map(|line| match line {
+                _ if line.starts_with("fold along y=") => Flip::Vertical,
+                _ => Flip::Horizontal,
+            })
+            .collect::<Vec<_>>();
+
+        let mut matrix = Matrix::new(width + 1, height + 1);
+        points.iter().for_each(|(x, y)| {
+            matrix.set(*x, *y, 1);
+        });
+
+        (matrix, flips)
+    }
+}
 
 impl Solution for DaySolution {
     fn new() -> Self {
@@ -12,186 +101,22 @@ impl Solution for DaySolution {
     }
 
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let mut count = 0;
+        let (mut matrix, flips) = self.parse(input);
 
-        let mut pos: Vec<(usize, usize)> = vec![];
-        let mut width = 0;
-        let mut height = 0;
-        let mut input = input.unwrap();
+        flips.iter().take(1).for_each(|flip| {
+            matrix = matrix.flip(flip);
+        });
 
-        for line in input.lines() {
-            count += 1;
-            if line == "" {
-                break;
-            }
-            let (x, y) = line.split_once(",").unwrap();
-            let (x, y) = (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap());
-            if x > width {
-                width = x;
-            }
-
-            if y > height {
-                height = y;
-            }
-
-            pos.push((x, y));
-        }
-
-        let mut flips = vec![];
-        for line in input.lines().skip(count) {
-            if line.starts_with("fold along y=") {
-                let value = line
-                    .strip_prefix("fold along y=")
-                    .unwrap()
-                    .parse::<usize>()
-                    .unwrap();
-                flips.push((value, "y"));
-            } else {
-                let value = line
-                    .strip_prefix("fold along x=")
-                    .unwrap()
-                    .parse::<usize>()
-                    .unwrap();
-                flips.push((value, "x"));
-            }
-        }
-
-        // println!("{:?}", flips);
-
-        let mut matrix = Matrix::new(width + 1, height + 1);
-        for p in pos {
-            matrix.set(p.0, p.1, 1);
-        }
-
-        // println!("{:?}", matrix);
-
-        for flip in flips {
-            let (width, height) = if flip.1 == "y" {
-                (matrix.width, matrix.height / 2)
-            } else {
-                (matrix.width / 2, matrix.height)
-            };
-
-            let mut new_matrix = Matrix::new(width, height);
-            if flip.1 == "y" {
-                for y in 0..height {
-                    for x in 0..width {
-                        let value1 = *matrix.get(x, y).unwrap();
-                        new_matrix.set(x, y, value1);
-                        let value2 = *matrix.get(x, matrix.height - y - 1).unwrap();
-
-                        new_matrix.set(x, y, value1 | value2);
-                    }
-                }
-            }
-            if flip.1 == "x" {
-                for y in 0..height {
-                    for x in 0..width {
-                        let value1 = *matrix.get(x, y).unwrap();
-                        new_matrix.set(x, y, value1);
-                        let value2 = *matrix.get(matrix.width - x - 1, y).unwrap();
-
-                        new_matrix.set(x, y, value1 | value2);
-                    }
-                }
-            }
-
-            count = new_matrix.iter().filter(|(v, _)| **v == 1).count();
-
-            break;
-        }
-
+        let count = matrix.iter().filter(|(v, _)| **v == 1).count();
         Ok(Box::new(count))
-        // let mut matrix = Matrix::new()
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let mut count = 0;
+        let (mut matrix, flips) = self.parse(input);
 
-        let mut pos: Vec<(usize, usize)> = vec![];
-        let mut width = 0;
-        let mut height = 0;
-        let mut input = input.unwrap();
-
-        for line in input.lines() {
-            count += 1;
-            if line == "" {
-                break;
-            }
-            let (x, y) = line.split_once(",").unwrap();
-            let (x, y) = (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap());
-            if x > width {
-                width = x;
-            }
-
-            if y > height {
-                height = y;
-            }
-
-            pos.push((x, y));
-        }
-
-        let mut flips = vec![];
-        for line in input.lines().skip(count) {
-            if line.starts_with("fold along y=") {
-                let value = line
-                    .strip_prefix("fold along y=")
-                    .unwrap()
-                    .parse::<usize>()
-                    .unwrap();
-                flips.push((value, "y"));
-            } else {
-                let value = line
-                    .strip_prefix("fold along x=")
-                    .unwrap()
-                    .parse::<usize>()
-                    .unwrap();
-                flips.push((value, "x"));
-            }
-        }
-
-        // println!("{:?}", flips);
-
-        let mut matrix = Matrix::new(width + 1, height + 1);
-        for p in pos {
-            matrix.set(p.0, p.1, 1);
-        }
-
-        // println!("{:?}", matrix);
-
-        for flip in flips {
-            let (width, height) = if flip.1 == "y" {
-                (matrix.width, matrix.height / 2)
-            } else {
-                (matrix.width / 2, matrix.height)
-            };
-
-            let mut new_matrix = Matrix::new(width, height);
-            if flip.1 == "y" {
-                for y in 0..height {
-                    for x in 0..width {
-                        let value1 = *matrix.get(x, y).unwrap();
-                        new_matrix.set(x, y, value1);
-                        let value2 = *matrix.get(x, matrix.height - y - 1).unwrap();
-
-                        new_matrix.set(x, y, value1 | value2);
-                    }
-                }
-            }
-            if flip.1 == "x" {
-                for y in 0..height {
-                    for x in 0..width {
-                        let value1 = *matrix.get(x, y).unwrap();
-                        new_matrix.set(x, y, value1);
-                        let value2 = *matrix.get(matrix.width - x - 1, y).unwrap();
-
-                        new_matrix.set(x, y, value1 | value2);
-                    }
-                }
-            }
-
-            matrix = new_matrix;
-        }
+        flips.iter().for_each(|flip| {
+            matrix = matrix.flip(flip);
+        });
 
         Ok(Box::new(format!("{:?}", matrix)))
     }
@@ -209,16 +134,13 @@ mod tests {
             .part_1(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("17", result.to_string())
-    }
+        assert_eq!("17", result.to_string());
 
-    #[test]
-    fn part_2() {
-        let input = include_str!("../../inputs/day13_demo.txt");
+        let input = include_str!("../../inputs/day13.txt");
         let result = DaySolution::default()
-            .part_2(Some(input.to_string()))
+            .part_1(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("", result.to_string())
+        assert_eq!("664", result.to_string());
     }
 }
