@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::ops::BitOr;
 
 use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
@@ -18,7 +19,7 @@ trait Flippable<T> {
 
 impl<T> Flippable<T> for Matrix<T>
 where
-    T: Default + PartialEq + Copy + PartialOrd,
+    T: Default + Copy + BitOr<Output = T>,
 {
     fn flip(&self, axis: &Flip) -> Matrix<T> {
         let (width, height) = if matches!(axis, Flip::Vertical) {
@@ -37,12 +38,9 @@ where
                 };
 
                 let value1 = *self.get(x, y).unwrap();
-                new_matrix.set(x, y, value1);
-
                 let value2 = *self.get(xx, yy).unwrap();
-                if value1 < value2 {
-                    new_matrix.set(x, y, value2);
-                }
+
+                new_matrix.set(x, y, value1 | value2);
             }
         }
 
