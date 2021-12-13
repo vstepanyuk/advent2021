@@ -165,12 +165,11 @@ impl<T: Default + FromStr> Matrix<T> {
 
         let data = lines
             .iter()
-            .map(|line| {
+            .flat_map(|line| {
                 line.chars()
                     .map(|ch| ch.to_string().parse::<T>().unwrap_or_default())
                     .collect::<Vec<T>>()
             })
-            .flatten()
             .collect::<Vec<T>>();
 
         Some(Self {

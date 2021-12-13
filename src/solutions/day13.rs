@@ -58,7 +58,7 @@ impl DaySolution {
             .lines()
             .take_while(|&line| !line.is_empty())
             .map(|line| {
-                let (x, y) = line.split_once(",").unwrap();
+                let (x, y) = line.split_once(',').unwrap();
                 let (x, y) = (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap());
 
                 if x > width {

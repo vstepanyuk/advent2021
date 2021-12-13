@@ -32,8 +32,7 @@ impl Solution for DaySolution {
 
         let mut heightmap = lines
             .iter()
-            .map(|line| line.chars().map(|ch| ch.to_digit(10).unwrap()))
-            .flatten()
+            .flat_map(|line| line.chars().map(|ch| ch.to_digit(10).unwrap()))
             .collect::<Vec<_>>();
 
         let mut counts: Vec<i32> = vec![];
