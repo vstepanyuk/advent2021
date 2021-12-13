@@ -9,8 +9,8 @@ pub struct DaySolution;
 
 #[derive(Debug)]
 enum Flip {
-    Horizontal,
-    Vertical,
+    Horizontal(usize),
+    Vertical(usize),
 }
 
 trait Flippable<T> {
@@ -22,10 +22,9 @@ where
     T: Default + Copy + BitOr<Output = T>,
 {
     fn flip(&self, axis: &Flip) -> Matrix<T> {
-        let (width, height) = if matches!(axis, Flip::Vertical) {
-            (self.width, self.height / 2)
-        } else {
-            (self.width / 2, self.height)
+        let (width, height) = match axis {
+            Flip::Vertical(value) => (self.width, *value),
+            Flip::Horizontal(value) => (*value, self.height),
         };
 
         let mut new_matrix: Matrix<T> = Matrix::new(width, height);
@@ -33,8 +32,8 @@ where
         for y in 0..height {
             for x in 0..width {
                 let (xx, yy) = match axis {
-                    Flip::Horizontal => (self.width - x - 1, y),
-                    Flip::Vertical => (x, self.height - y - 1),
+                    Flip::Horizontal(_) => (self.width - x - 1, y),
+                    Flip::Vertical(_) => (x, self.height - y - 1),
                 };
 
                 let value1 = *self.get(x, y).unwrap();
@@ -78,9 +77,13 @@ impl DaySolution {
             .lines()
             .skip_while(|&line| !line.is_empty())
             .skip(1)
-            .map(|line| match line {
-                _ if line.starts_with("fold along y=") => Flip::Vertical,
-                _ => Flip::Horizontal,
+            .map(|line| {
+                let (_, value) = line.split_once('=').unwrap();
+                let value = value.parse().unwrap();
+                match line {
+                    _ if line.starts_with("fold along y=") => Flip::Vertical(value),
+                    _ => Flip::Horizontal(value),
+                }
             })
             .collect::<Vec<_>>();
 
