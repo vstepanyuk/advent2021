@@ -1,141 +1,66 @@
 use crate::solutions::{Result, Solution};
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::hash::Hash;
 
 #[derive(Default)]
 pub struct DaySolution;
 
-impl Solution for DaySolution {
-    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let input = input.unwrap();
-        let lines = input.lines().map(String::from).collect::<Vec<_>>();
-        let mut polymer = lines.first().unwrap().to_string();
+impl DaySolution {
+    fn solve(&self, input: Option<String>, steps: usize) -> usize {
+        let lines = input.unwrap().lines().map(String::from).collect::<Vec<_>>();
 
-        let rules = lines
-            .iter()
-            .skip(2)
-            .map(|line| {
-                let (a, b) = line.split_once(" -> ").unwrap();
-                return (a.to_string(), b.to_string());
-            })
-            .collect::<Vec<(String, String)>>();
+        let polymer = lines.first().unwrap().to_string();
+        let rules: HashMap<String, (String, Vec<String>)> =
+            HashMap::from_iter(lines.iter().skip(2).map(|line| {
+                let (pair, letter) = line.split_once(" -> ").unwrap();
+                let (first, last) = pair.split_at(1);
 
-        for _ in 0..10 {
-            let mut pp = String::default();
+                let first = format!("{}{}", first, letter);
+                let last = format!("{}{}", letter, last);
 
-            polymer
-                .chars()
-                .collect::<Vec<_>>()
-                .windows(2)
-                .for_each(|a| {
-                    let b = a.to_vec().iter().collect::<String>();
-                    let rule = rules
-                        .iter()
-                        .find(|(r, _)| *r == b)
-                        .map(|(_, r)| r.to_owned())
-                        .unwrap();
+                (pair.to_string(), (letter.to_string(), vec![first, last]))
+            }));
 
-                    pp = format!("{}{}{}", pp, a[0], rule);
-                });
-            pp = format!("{}{}", pp, polymer.chars().last().unwrap());
-
-            polymer = pp;
-        }
-
-        let mut hashmap: HashMap<char, usize> = HashMap::new();
-        for ch in polymer.chars() {
-            *hashmap.entry(ch).or_insert(0) += 1;
-        }
-
-        let a = hashmap.values().min().unwrap();
-        let b = hashmap.values().max().unwrap();
-
-        println!("a={}, b={}", a, b);
-
-        Ok(Box::new(b - a))
-    }
-
-    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let input = input.unwrap();
-        let lines = input.lines().map(String::from).collect::<Vec<_>>();
-        let mut polymer = lines.first().unwrap().to_string();
-
-        let rules = lines
-            .iter()
-            .skip(2)
-            .map(|line| {
-                let (a, b) = line.split_once(" -> ").unwrap();
-                let chars = a.chars().collect::<Vec<_>>();
-
-                let c1 = format!("{}{}", chars[0], b);
-                let c2 = format!("{}{}", b, chars[1]);
-
-                return (a.to_string(), b.to_string(), c1, c2);
-            })
-            .collect::<Vec<(String, String, String, String)>>();
-
-        let mut counts: HashMap<String, usize> = HashMap::new();
-        let mut letters = HashMap::<char, usize>::new();
+        let mut polymer_pairs: HashMap<String, usize> = HashMap::new();
+        let mut letters: HashMap<String, usize> = HashMap::new();
 
         polymer
             .chars()
+            .map(|ch| {
+                *letters.entry(ch.to_string()).or_insert(0) += 1;
+                ch
+            })
             .collect::<Vec<_>>()
             .windows(2)
             .for_each(|pair| {
-                let pair = pair.to_vec().iter().collect::<String>();
-                *counts.entry(pair).or_insert(0) += 1;
+                let pair = pair.iter().collect::<_>();
+                *polymer_pairs.entry(pair).or_insert(0) += 1;
             });
 
-        polymer.chars().for_each(|ch| {
-            *letters.entry(ch).or_insert(0) += 1;
-        });
-
-        let mut rules2: HashMap<String, (String, String)> = HashMap::new();
-
-        for rule in rules {
-            rules2.entry(rule.0.clone()).or_insert((rule.2, rule.3));
-        }
-
-        for _ in 0..40 {
-            // println!("{:?}", counts);
-            // println!("{:?}", letters);
-
-            let mut counts2: HashMap<String, usize> = HashMap::new();
-            counts.iter().for_each(|(pair, c)| {
-                if *c == 0 {
-                    return;
-                }
-
-                let cc = pair.chars().collect::<Vec<_>>();
-
-                for ccc in cc {
-                    *letters.entry(ccc).or_insert(0) -= c;
-                }
-
-                let (r1, r2) = rules2.get(pair).unwrap();
-                let c1 = r1.chars().collect::<Vec<_>>()[0];
-                let c2 = r2.chars().collect::<Vec<_>>()[1];
-                let c3 = r2.chars().collect::<Vec<_>>()[0];
-
-                *letters.entry(c1).or_insert(0) += c;
-                *letters.entry(c2).or_insert(0) += c;
-                *letters.entry(c3).or_insert(0) += c;
-
-                *counts2.entry(r1.clone()).or_insert(0) += *c;
-                *counts2.entry(r2.clone()).or_insert(0) += *c;
+        for _ in 0..steps {
+            let mut tmp = HashMap::<String, usize>::new();
+            polymer_pairs.iter().for_each(|(pair, count)| {
+                let (letter, new_pairs) = rules.get(pair).unwrap();
+                *letters.entry(letter.clone()).or_insert(0) += count;
+                new_pairs.iter().for_each(|pair| {
+                    *tmp.entry(pair.clone()).or_insert(0) += count;
+                });
             });
 
-            counts = counts2;
+            polymer_pairs = tmp;
         }
-        println!("{:?}", letters);
 
-        let a = letters.values().min().unwrap();
-        let b = letters.values().max().unwrap();
+        letters.values().max().unwrap() - letters.values().min().unwrap()
+    }
+}
 
-        println!("{:?}, {}", letters, b - a);
+impl Solution for DaySolution {
+    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
+        Ok(Box::new(self.solve(input, 10)))
+    }
 
-        Ok(Box::new(0))
+    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
+        Ok(Box::new(self.solve(input, 40)))
     }
 }
 
@@ -151,7 +76,7 @@ mod tests {
             .part_1(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("", result.to_string())
+        assert_eq!("1588", result.to_string())
     }
 
     #[test]
@@ -161,6 +86,6 @@ mod tests {
             .part_2(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("", result.to_string())
+        assert_eq!("2188189693529", result.to_string())
     }
 }
