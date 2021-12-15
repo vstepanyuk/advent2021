@@ -8,10 +8,9 @@ use std::fmt::Display;
 pub struct DaySolution;
 
 impl DaySolution {
-    fn solve(&self, matrix: &Matrix<usize>) -> usize {
+    fn solve(&self, matrix: &Matrix<usize>) -> Option<usize> {
         let mut queue = BinaryHeap::new();
         let mut visited = HashSet::new();
-        let mut min_risk = 0;
 
         queue.push((Reverse(0), (0, 0)));
         while let Some((Reverse(risk), pos)) = queue.pop() {
@@ -21,8 +20,7 @@ impl DaySolution {
             visited.insert(pos);
 
             if pos == (matrix.width as i32 - 1, matrix.height as i32 - 1) {
-                min_risk = risk;
-                break;
+                return Some(risk);
             }
 
             queue.extend(
@@ -34,7 +32,7 @@ impl DaySolution {
             );
         }
 
-        min_risk
+        None
     }
 }
 
@@ -43,7 +41,7 @@ impl Solution for DaySolution {
         let input = input.unwrap();
         let matrix = Matrix::<usize>::from(&input).unwrap();
 
-        Ok(Box::new(self.solve(&matrix)))
+        Ok(Box::new(self.solve(&matrix).unwrap()))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
@@ -60,7 +58,7 @@ impl Solution for DaySolution {
             new_matrix.set(i * matrix.width + x, j * matrix.height + y, value);
         }
 
-        Ok(Box::new(self.solve(&new_matrix)))
+        Ok(Box::new(self.solve(&new_matrix).unwrap()))
     }
 }
 
