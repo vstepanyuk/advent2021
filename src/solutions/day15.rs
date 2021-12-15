@@ -54,17 +54,13 @@ impl Solution for DaySolution {
         let matrix = Matrix::<i32>::from(&input).unwrap();
         let mut new_matrix = Matrix::new(matrix.width * 5, matrix.height * 5);
 
-        for (j, i) in itertools::iproduct!(0..5, 0..5) {
-            for y in 0..matrix.width {
-                for x in 0..matrix.height {
-                    let mut value = *matrix.get(x, y).unwrap() + (i + j) as i32;
-                    if value > 9 {
-                        value -= 9;
-                    }
-
-                    new_matrix.set(i * matrix.width + x, j * matrix.height + y, value);
-                }
+        for (i, j, x, y) in itertools::iproduct!(0..5, 0..5, 0..matrix.width, 0..matrix.height) {
+            let mut value = *matrix.get(x, y).unwrap() + (i + j) as i32;
+            if value > 9 {
+                value -= 9;
             }
+
+            new_matrix.set(i * matrix.width + x, j * matrix.height + y, value);
         }
 
         Ok(Box::new(self.solve(&new_matrix)))
