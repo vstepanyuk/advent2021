@@ -29,6 +29,9 @@ impl DaySolution {
 
             for (dx, dy) in offsets {
                 if let Some(&value) = matrix.get(x + dx, y + dy) {
+                    if visited.contains(&(x + dx, y + dy)) {
+                        continue;
+                    }
                     q.push((Reverse(value + risk), (x + dx, y + dy)))
                 }
             }
