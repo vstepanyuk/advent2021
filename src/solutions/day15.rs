@@ -8,7 +8,7 @@ use std::fmt::Display;
 pub struct DaySolution;
 
 impl DaySolution {
-    fn solve(&self, matrix: &Matrix<i32>) -> i32 {
+    fn solve(&self, matrix: &Matrix<usize>) -> usize {
         let mut q = BinaryHeap::new();
         q.push((Reverse(0), (0, 0)));
 
@@ -44,18 +44,18 @@ impl DaySolution {
 impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let input = input.unwrap();
-        let matrix = Matrix::<i32>::from(&input).unwrap();
+        let matrix = Matrix::<usize>::from(&input).unwrap();
 
         Ok(Box::new(self.solve(&matrix)))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let input = input.unwrap();
-        let matrix = Matrix::<i32>::from(&input).unwrap();
+        let matrix = Matrix::<usize>::from(&input).unwrap();
         let mut new_matrix = Matrix::new(matrix.width * 5, matrix.height * 5);
 
         for (i, j, x, y) in itertools::iproduct!(0..5, 0..5, 0..matrix.width, 0..matrix.height) {
-            let mut value = *matrix.get(x, y).unwrap() + (i + j) as i32;
+            let mut value = *matrix.get(x, y).unwrap() + i + j;
             if value > 9 {
                 value -= 9;
             }
@@ -79,7 +79,13 @@ mod tests {
             .part_1(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("40", result.to_string())
+        assert_eq!("40", result.to_string());
+
+        let input = include_str!("../../inputs/day15.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+        assert_eq!("769", result.to_string());
     }
 
     #[test]
@@ -89,6 +95,12 @@ mod tests {
             .part_2(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("315", result.to_string())
+        assert_eq!("315", result.to_string());
+
+        let input = include_str!("../../inputs/day15.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+        assert_eq!("2963", result.to_string());
     }
 }
