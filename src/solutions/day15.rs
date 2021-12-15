@@ -1,5 +1,5 @@
+use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
-use crate::{matrix, matrix::Matrix};
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashSet};
 use std::fmt::Display;
@@ -25,14 +25,12 @@ impl DaySolution {
                 break;
             }
 
-            for (dx, dy) in matrix::MATRIX_NEIGHBOURS_4 {
-                if let Some(&value) = matrix.get(x + dx, y + dy) {
-                    if visited.contains(&(x + dx, y + dy)) {
-                        continue;
-                    }
-                    priority_queue.push((Reverse(value + risk), (x + dx, y + dy)))
-                }
-            }
+            priority_queue.extend(
+                matrix
+                    .neighbours4_iter(x, y)
+                    .filter(|(_, pos)| !visited.contains(pos))
+                    .map(|(value, pos)| (Reverse(value + risk), pos)),
+            );
         }
 
         min_risk

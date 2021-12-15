@@ -176,6 +176,41 @@ impl<T> Matrix<T> {
     }
 
     #[allow(dead_code)]
+    pub fn neighbours_iter<'a, P>(
+        &'a self,
+        offsets: &'a [(i32, i32)],
+        x: P,
+        y: P,
+    ) -> impl Iterator<Item = (&'a T, (i32, i32))> + 'a
+    where
+        P: TryInto<i32>,
+    {
+        let x = x.try_into().ok().unwrap();
+        let y = y.try_into().ok().unwrap();
+
+        offsets.iter().filter_map(move |(dx, dy)| {
+            self.get(x + dx, y + dy)
+                .map(|value| (value, (x + dx, y + dy)))
+        })
+    }
+
+    #[allow(dead_code)]
+    pub fn neighbours8_iter<P>(&self, x: P, y: P) -> impl Iterator<Item = (&T, (i32, i32))>
+    where
+        P: TryInto<i32>,
+    {
+        self.neighbours_iter(&MATRIX_NEIGHBOURS_8, x, y)
+    }
+
+    #[allow(dead_code)]
+    pub fn neighbours4_iter<P>(&self, x: P, y: P) -> impl Iterator<Item = (&T, (i32, i32))>
+    where
+        P: TryInto<i32>,
+    {
+        self.neighbours_iter(&MATRIX_NEIGHBOURS_4, x, y)
+    }
+
+    #[allow(dead_code)]
     pub fn render_to_string<F>(&self, renderer: F) -> String
     where
         F: Fn(Option<&T>) -> String,
