@@ -9,25 +9,29 @@ pub struct DaySolution;
 
 impl DaySolution {
     fn solve(&self, matrix: &Matrix<usize>) -> usize {
-        let mut priority_queue = BinaryHeap::new();
+        let mut queue = BinaryHeap::new();
         let mut visited = HashSet::new();
-
-        priority_queue.push((Reverse(0), (0, 0)));
         let mut min_risk = 0;
-        while let Some((Reverse(risk), (x, y))) = priority_queue.pop() {
-            if visited.contains(&(x, y)) {
+
+        queue.push((Reverse(0), (0, 0)));
+        while let Some((Reverse(risk), pos)) = queue.pop() {
+            if visited.contains(&pos) {
                 continue;
             }
-            visited.insert((x, y));
+            visited.insert(pos);
 
-            if (x, y) == (matrix.width as i32 - 1, matrix.height as i32 - 1) {
+            if pos == (matrix.width as i32 - 1, matrix.height as i32 - 1) {
                 min_risk = risk;
                 break;
             }
 
-            priority_queue.extend(matrix.neighbours4_iter(x, y).filter_map(|(value, pos)| {
-                (!visited.contains(&pos)).then(|| (Reverse(value + risk), pos))
-            }));
+            queue.extend(
+                matrix
+                    .neighbours4_iter(pos.0, pos.1)
+                    .filter_map(|(value, pos)| {
+                        (!visited.contains(&pos)).then(|| (Reverse(value + risk), pos))
+                    }),
+            );
         }
 
         min_risk
