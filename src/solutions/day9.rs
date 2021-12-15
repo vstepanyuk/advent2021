@@ -11,17 +11,17 @@ impl DaySolution {}
 
 impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let matrix = Matrix::<i32>::from(&input.unwrap()).unwrap();
-        let mut result = 0;
-
-        for x in 0..matrix.width {
-            for y in 0..matrix.height {
-                let value = matrix.get(x, y).unwrap();
-                if matrix.neighbours(x, y).iter().all(|&v| v > value) {
-                    result += value + 1;
-                }
-            }
-        }
+        let result: usize = Matrix::<u8>::from(&input.unwrap())
+            .unwrap()
+            .iter_with_self()
+            .filter_map(|(value, (x, y), matrix)| {
+                matrix
+                    .neighbours4(x, y)
+                    .iter()
+                    .all(|&v| v > value)
+                    .then(|| (value + 1) as usize)
+            })
+            .sum();
 
         Ok(Box::new(result))
     }

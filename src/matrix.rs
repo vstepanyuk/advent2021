@@ -7,6 +7,21 @@ pub struct Matrix<T> {
     pub(crate) data: Vec<T>,
 }
 
+#[allow(dead_code)]
+pub const MATRIX_NEIGHBOURS_4: [(i32, i32); 4] = [(1, 0), (0, 1), (0, -1), (-1, 0)];
+
+#[allow(dead_code)]
+pub const MATRIX_NEIGHBOURS_8: [(i32, i32); 8] = [
+    (1, 0),
+    (0, 1),
+    (0, -1),
+    (-1, 0),
+    (-1, -1),
+    (1, 1),
+    (-1, 1),
+    (1, -1),
+];
+
 impl<T> Matrix<T> {
     pub fn size(&self) -> usize {
         self.width * self.height
@@ -29,6 +44,16 @@ impl<T> Matrix<T> {
             let y = index / self.width;
 
             (value, (x, y))
+        })
+    }
+
+    #[allow(dead_code)]
+    pub fn iter_with_self(&self) -> impl Iterator<Item = (&T, (usize, usize), &Matrix<T>)> {
+        self.data.iter().enumerate().map(move |(index, value)| {
+            let x = index % self.width;
+            let y = index / self.width;
+
+            (value, (x, y), self)
         })
     }
 }
@@ -123,15 +148,28 @@ impl<T> Matrix<T> {
         }
     }
 
-    pub fn neighbours<P>(&self, x: P, y: P) -> Vec<&T>
+    pub fn neighbours4<P>(&self, x: P, y: P) -> Vec<&T>
     where
         P: TryInto<i32>,
     {
         let x = x.try_into().ok().unwrap();
         let y = y.try_into().ok().unwrap();
-        let offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)];
 
-        offsets
+        MATRIX_NEIGHBOURS_4
+            .iter()
+            .filter_map(|(dx, dy)| self.get(x + dx, y + dy))
+            .collect()
+    }
+
+    #[allow(dead_code)]
+    pub fn neighbours8<P>(&self, x: P, y: P) -> Vec<&T>
+    where
+        P: TryInto<i32>,
+    {
+        let x = x.try_into().ok().unwrap();
+        let y = y.try_into().ok().unwrap();
+
+        MATRIX_NEIGHBOURS_8
             .iter()
             .filter_map(|(dx, dy)| self.get(x + dx, y + dy))
             .collect()

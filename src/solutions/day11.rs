@@ -1,7 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 use std::fmt::Display;
 
-use crate::matrix::Matrix;
+use crate::matrix::{Matrix, MATRIX_NEIGHBOURS_8};
 use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
@@ -16,17 +16,6 @@ impl DaySolution {
             (*energy > 9).then(|| (x as i32, y as i32))
         }));
 
-        let offsets = [
-            (-1, 0),
-            (1, 0),
-            (0, -1),
-            (0, 1),
-            (-1, -1),
-            (1, 1),
-            (-1, 1),
-            (1, -1),
-        ];
-
         let mut flashed = HashSet::new();
         while let Some((x, y)) = queue.pop_front() {
             if flashed.contains(&(x, y)) {
@@ -34,7 +23,7 @@ impl DaySolution {
             }
 
             flashed.insert((x, y));
-            queue.extend(offsets.iter().filter_map(|(dx, dy)| {
+            queue.extend(MATRIX_NEIGHBOURS_8.iter().filter_map(|(dx, dy)| {
                 matrix.get_mut(x + dx, y + dy).and_then(|energy| {
                     *energy += 1;
                     (*energy > 9).then(|| (x + dx, y + dy))

@@ -1,5 +1,5 @@
-use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
+use crate::{matrix, matrix::Matrix};
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashSet};
 use std::fmt::Display;
@@ -9,14 +9,12 @@ pub struct DaySolution;
 
 impl DaySolution {
     fn solve(&self, matrix: &Matrix<usize>) -> usize {
-        let mut q = BinaryHeap::new();
-        q.push((Reverse(0), (0, 0)));
-
-        let offsets = [(1, 0), (0, 1), (0, -1), (-1, 0)];
+        let mut priority_queue = BinaryHeap::new();
         let mut visited = HashSet::new();
 
+        priority_queue.push((Reverse(0), (0, 0)));
         let mut min_risk = 0;
-        while let Some((Reverse(risk), (x, y))) = q.pop() {
+        while let Some((Reverse(risk), (x, y))) = priority_queue.pop() {
             if visited.contains(&(x, y)) {
                 continue;
             }
@@ -27,12 +25,12 @@ impl DaySolution {
                 break;
             }
 
-            for (dx, dy) in offsets {
+            for (dx, dy) in matrix::MATRIX_NEIGHBOURS_4 {
                 if let Some(&value) = matrix.get(x + dx, y + dy) {
                     if visited.contains(&(x + dx, y + dy)) {
                         continue;
                     }
-                    q.push((Reverse(value + risk), (x + dx, y + dy)))
+                    priority_queue.push((Reverse(value + risk), (x + dx, y + dy)))
                 }
             }
         }
