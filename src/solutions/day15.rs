@@ -25,12 +25,9 @@ impl DaySolution {
                 break;
             }
 
-            priority_queue.extend(
-                matrix
-                    .neighbours4_iter(x, y)
-                    .filter(|(_, pos)| !visited.contains(pos))
-                    .map(|(value, pos)| (Reverse(value + risk), pos)),
-            );
+            priority_queue.extend(matrix.neighbours4_iter(x, y).filter_map(|(value, pos)| {
+                (!visited.contains(&pos)).then(|| (Reverse(value + risk), pos))
+            }));
         }
 
         min_risk
