@@ -13,7 +13,7 @@ impl DaySolution {
         q.push((Reverse(0), (0, 0)));
 
         let offsets = [(1, 0), (0, 1), (0, -1), (-1, 0)];
-        let mut visited = HashSet::<(i32, i32)>::new();
+        let mut visited = HashSet::new();
 
         let mut min_risk = 0;
         while let Some((Reverse(risk), (x, y))) = q.pop() {
