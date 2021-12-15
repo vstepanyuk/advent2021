@@ -22,7 +22,7 @@ impl DaySolution {
             }
             visited.insert((x, y));
 
-            if x == matrix.width as i32 - 1 && y == matrix.height as i32 - 1 {
+            if (x, y) == (matrix.width as i32 - 1, matrix.height as i32 - 1) {
                 min_risk = risk;
                 break;
             }
