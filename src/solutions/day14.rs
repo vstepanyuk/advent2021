@@ -1,6 +1,9 @@
-use crate::solutions::{Result, Solution};
 use std::collections::HashMap;
 use std::fmt::Display;
+
+use itertools::{Itertools, MinMaxResult};
+
+use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -50,7 +53,11 @@ impl DaySolution {
             polymer_pairs = tmp;
         }
 
-        letters.values().max().unwrap() - letters.values().min().unwrap()
+        if let MinMaxResult::MinMax(min, max) = letters.values().minmax() {
+            return max - min;
+        }
+
+        0
     }
 }
 
