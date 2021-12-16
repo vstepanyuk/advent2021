@@ -142,14 +142,14 @@ impl Packet {
     fn value(&self) -> usize {
         match &self.data {
             PacketData::Literal(value) => *value,
-            PacketData::Op(sub) => match self.r#type {
-                0 => sub.iter().map(|p| p.value()).sum(),
-                1 => sub.iter().map(|p| p.value()).product(),
-                2 => sub.iter().map(|p| p.value()).min().unwrap(),
-                3 => sub.iter().map(|p| p.value()).max().unwrap(),
-                5 => (sub[0].value() > sub[1].value()) as usize,
-                6 => (sub[0].value() < sub[1].value()) as usize,
-                7 => (sub[0].value() == sub[1].value()) as usize,
+            PacketData::Op(packets) => match self.r#type {
+                0 => packets.iter().map(|p| p.value()).sum(),
+                1 => packets.iter().map(|p| p.value()).product(),
+                2 => packets.iter().map(|p| p.value()).min().unwrap(),
+                3 => packets.iter().map(|p| p.value()).max().unwrap(),
+                5 => (packets[0].value() > packets[1].value()) as usize,
+                6 => (packets[0].value() < packets[1].value()) as usize,
+                7 => (packets[0].value() == packets[1].value()) as usize,
                 _ => unreachable!(),
             },
         }
