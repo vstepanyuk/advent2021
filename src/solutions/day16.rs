@@ -9,6 +9,19 @@ use std::fmt::Display;
 #[derive(Default)]
 pub struct DaySolution;
 
+#[derive(Debug, PartialEq)]
+struct Packet {
+    version: usize,
+    r#type: usize,
+    data: PacketData,
+}
+
+#[derive(Debug, PartialEq)]
+enum PacketData {
+    Literal(usize),
+    Op(Vec<Packet>),
+}
+
 trait BitString {
     fn to_bit_string(&self) -> String;
 }
@@ -58,7 +71,14 @@ impl Parser {
         let (input, (version, _, value)) =
             tuple((Self::header_item, tag("100"), Self::literal_groups))(input)?;
 
-        Ok((input, Packet::Literal(version, 4, value)))
+        Ok((
+            input,
+            Packet {
+                version,
+                r#type: 4,
+                data: PacketData::Literal(value),
+            },
+        ))
     }
 
     fn packet_op1(input: &str) -> IResult<&str, Packet> {
@@ -70,7 +90,14 @@ impl Parser {
         let (input, s) = take(len)(input)?;
         let (_, packets) = many1(Self::packet)(s)?;
 
-        Ok((input, Packet::Op(version, r#type, packets)))
+        Ok((
+            input,
+            Packet {
+                version,
+                r#type,
+                data: PacketData::Op(packets),
+            },
+        ))
     }
 
     fn packet_op2(input: &str) -> IResult<&str, Packet> {
@@ -81,7 +108,14 @@ impl Parser {
         ))(input)?;
         let (input, packets) = count(Self::packet, len as usize)(input)?;
 
-        Ok((input, Packet::Op(version, r#type, packets)))
+        Ok((
+            input,
+            Packet {
+                version,
+                r#type,
+                data: PacketData::Op(packets),
+            },
+        ))
     }
 
     fn packet(input: &str) -> IResult<&str, Packet> {
@@ -95,31 +129,29 @@ impl Parser {
     }
 }
 
-#[derive(Debug, PartialEq)]
-enum Packet {
-    Literal(usize, usize, usize),
-    Op(usize, usize, Vec<Packet>),
-}
-
 impl Packet {
     fn sum(&self) -> usize {
-        match self {
-            Packet::Literal(version, _, _) => *version,
-            Packet::Op(version, _, sub) => sub.iter().fold(*version, |a, c| a + c.sum()),
+        match &self.data {
+            PacketData::Literal(_) => self.version,
+            PacketData::Op(sub) => sub
+                .iter()
+                .fold(self.version, |sum, packet| sum + packet.sum()),
         }
     }
 
     fn value(&self) -> usize {
-        match self {
-            Packet::Literal(_, _, value) => *value,
-            Packet::Op(_, 0, sub) => sub.iter().map(|p| p.value()).sum(),
-            Packet::Op(_, 1, sub) => sub.iter().map(|p| p.value()).product(),
-            Packet::Op(_, 2, sub) => sub.iter().map(|p| p.value()).min().unwrap(),
-            Packet::Op(_, 3, sub) => sub.iter().map(|p| p.value()).max().unwrap(),
-            Packet::Op(_, 5, sub) => (sub[0].value() > sub[1].value()) as usize,
-            Packet::Op(_, 6, sub) => (sub[0].value() < sub[1].value()) as usize,
-            Packet::Op(_, 7, sub) => (sub[0].value() == sub[1].value()) as usize,
-            _ => unreachable!(),
+        match &self.data {
+            PacketData::Literal(value) => *value,
+            PacketData::Op(sub) => match self.r#type {
+                0 => sub.iter().map(|p| p.value()).sum(),
+                1 => sub.iter().map(|p| p.value()).product(),
+                2 => sub.iter().map(|p| p.value()).min().unwrap(),
+                3 => sub.iter().map(|p| p.value()).max().unwrap(),
+                5 => (sub[0].value() > sub[1].value()) as usize,
+                6 => (sub[0].value() < sub[1].value()) as usize,
+                7 => (sub[0].value() == sub[1].value()) as usize,
+                _ => unreachable!(),
+            },
         }
     }
 }
