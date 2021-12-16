@@ -45,7 +45,7 @@ impl Parser {
         head.push(tail);
         let value = head
             .into_iter()
-            .fold(0, |result, group| (result << 4) + group as usize);
+            .fold(0, |result, group| result << 4 | group);
 
         Ok((input, value))
     }
