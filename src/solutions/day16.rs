@@ -1,28 +1,108 @@
 use crate::solutions::{Result, Solution};
+use nom::branch::alt;
+use nom::bytes::complete::take;
+use nom::multi::{count, many0, many1};
+use nom::{bytes::complete::tag, combinator::map_res, sequence::tuple, IResult};
 use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
 
-#[derive(Debug)]
+trait BitString {
+    fn to_bit_string(&self) -> String;
+}
+
+impl BitString for str {
+    fn to_bit_string(&self) -> String {
+        self.chars()
+            .map(|ch| {
+                let digit = ch.to_digit(16).unwrap();
+                format!("{:04b}", digit & 0b1111)
+            })
+            .collect::<Vec<_>>()
+            .join("")
+    }
+}
+
+struct Parser {}
+
+impl Parser {
+    fn from_bin(input: &str) -> std::result::Result<usize, std::num::ParseIntError> {
+        usize::from_str_radix(input, 2)
+    }
+
+    fn literal_group(prefix: &str) -> impl Fn(&str) -> IResult<&str, usize> + '_ {
+        move |input| {
+            let (input, _) = tag(prefix)(input)?;
+            map_res(take(4usize), Self::from_bin)(input)
+        }
+    }
+
+    fn literal_groups(input: &str) -> IResult<&str, usize> {
+        let (input, (mut head, tail)) = tuple((
+            many0(Parser::literal_group("1")),
+            Parser::literal_group("0"),
+        ))(input)?;
+
+        head.push(tail);
+        let value = head
+            .into_iter()
+            .fold(0, |result, group| (result << 4) + group as usize);
+
+        Ok((input, value))
+    }
+
+    fn header_item(input: &str) -> IResult<&str, usize> {
+        map_res(take(3usize), Self::from_bin)(input)
+    }
+
+    fn packet_literal(input: &str) -> IResult<&str, Packet> {
+        let (input, (version, _, value)) =
+            tuple((Self::header_item, tag("100"), Self::literal_groups))(input)?;
+
+        Ok((input, Packet::Literal(version, 4, value)))
+    }
+
+    fn packet_op1(input: &str) -> IResult<&str, Packet> {
+        let (input, (version, r#type, _, len)) = tuple((
+            Self::header_item,
+            Self::header_item,
+            tag("0"),
+            map_res(take(15usize), Self::from_bin),
+        ))(input)?;
+        let (input, s) = take(len)(input)?;
+        let (_, packets) = many1(Self::packet)(s)?;
+
+        Ok((input, Packet::Op(version, r#type, packets)))
+    }
+
+    fn packet_op2(input: &str) -> IResult<&str, Packet> {
+        let (input, (version, r#type, _, len)) = tuple((
+            Self::header_item,
+            Self::header_item,
+            tag("1"),
+            map_res(take(11usize), Self::from_bin),
+        ))(input)?;
+        let (input, packets) = count(Self::packet, len as usize)(input)?;
+
+        Ok((input, Packet::Op(version, r#type, packets)))
+    }
+
+    fn packet(input: &str) -> IResult<&str, Packet> {
+        alt((Parser::packet_literal, Self::packet_op1, Self::packet_op2))(input)
+    }
+
+    fn parse(input: &str) -> Option<Packet> {
+        Self::packet(&input.to_bit_string())
+            .map(|(_, packet)| packet)
+            .ok()
+    }
+}
+
+#[derive(Debug, PartialEq)]
 enum Packet {
     Literal(usize, usize, usize),
     Op(usize, usize, Vec<Packet>),
-}
-
-trait BinString {
-    fn as_bits(&self) -> Vec<u8>;
-}
-
-impl BinString for str {
-    fn as_bits(&self) -> Vec<u8> {
-        self.chars()
-            .flat_map(|b| {
-                let digit = b.to_digit(16).unwrap();
-                (0..4).map(move |i| ((digit << (i + 1) & 0b10000) >> 4) as u8)
-            })
-            .collect::<Vec<_>>()
-    }
 }
 
 impl Packet {
@@ -48,83 +128,15 @@ impl Packet {
     }
 }
 
-trait Bits {
-    fn value(&self, from: usize, n: usize) -> usize;
-}
-
-impl Bits for [u8] {
-    fn value(&self, from: usize, n: usize) -> usize {
-        self[from..from + n]
-            .iter()
-            .fold(0, |r, b| (r << 1) + *b as usize)
-    }
-}
-
-impl DaySolution {
-    fn read_packets(&self, bits: &[u8], count: usize) -> (usize, Vec<Packet>) {
-        let mut index = 0;
-        let mut packets = vec![];
-
-        while index < bits.len() && packets.len() < count {
-            let version = bits.value(index, 3);
-            index += 3;
-
-            let typ = bits.value(index, 3);
-            index += 3;
-
-            if typ == 4 {
-                let mut literals: Vec<usize> = vec![];
-                while bits[index] == 1 {
-                    let literal = bits.value(index + 1, 4);
-                    index += 5;
-
-                    literals.push(literal);
-                }
-                let literal = bits.value(index + 1, 4);
-                index += 5;
-
-                literals.push(literal);
-
-                let value = literals.iter().fold(0, |r, b| (r << 4) + *b);
-
-                packets.push(Packet::Literal(version, typ, value as usize));
-                continue;
-            }
-
-            let op_type = bits[index];
-            index += 1;
-
-            let index_inc = if op_type == 0 { 15 } else { 11 };
-            let op_len = bits.value(index, index_inc);
-            index += index_inc;
-
-            let (bits_range, packets_to_read) = if op_type == 0 {
-                (&bits[index..index + op_len], usize::MAX)
-            } else {
-                (&bits[index..], op_len)
-            };
-
-            let (skip, sub_packets) = self.read_packets(bits_range, packets_to_read);
-            index += skip;
-            packets.push(Packet::Op(version, typ, sub_packets))
-        }
-
-        (index, packets)
-    }
-}
-
 impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let (_, packets) = self.read_packets(&input.unwrap().as_bits(), 1);
-        let sum = packets[0].sum();
-
-        Ok(Box::new(sum))
+        let packet = Parser::parse(&input.unwrap()).unwrap();
+        Ok(Box::new(packet.sum()))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let (_, packets) = self.read_packets(&input.unwrap().as_bits(), 1);
-
-        Ok(Box::new(packets[0].value()))
+        let packet = Parser::parse(&input.unwrap()).unwrap();
+        Ok(Box::new(packet.value()))
     }
 }
 
