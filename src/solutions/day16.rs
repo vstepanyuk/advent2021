@@ -49,20 +49,14 @@ impl Packet {
 }
 
 trait Bits {
-    fn bits_take(&self, from: usize, n: usize) -> usize;
-    fn print_bits(&self);
+    fn value(&self, from: usize, n: usize) -> usize;
 }
 
 impl Bits for [u8] {
-    fn bits_take(&self, from: usize, n: usize) -> usize {
+    fn value(&self, from: usize, n: usize) -> usize {
         self[from..from + n]
             .iter()
             .fold(0, |r, b| (r << 1) + *b as usize)
-    }
-
-    fn print_bits(&self) {
-        self.iter().for_each(|x| print!("{}", x));
-        println!();
     }
 }
 
@@ -72,21 +66,21 @@ impl DaySolution {
         let mut packets = vec![];
 
         while index < bits.len() && packets.len() < count {
-            let version = bits.bits_take(index, 3);
+            let version = bits.value(index, 3);
             index += 3;
 
-            let typ = bits.bits_take(index, 3);
+            let typ = bits.value(index, 3);
             index += 3;
 
             if typ == 4 {
                 let mut literals: Vec<usize> = vec![];
                 while bits[index] == 1 {
-                    let literal = bits.bits_take(index + 1, 4);
+                    let literal = bits.value(index + 1, 4);
                     index += 5;
 
                     literals.push(literal);
                 }
-                let literal = bits.bits_take(index + 1, 4);
+                let literal = bits.value(index + 1, 4);
                 index += 5;
 
                 literals.push(literal);
@@ -101,35 +95,18 @@ impl DaySolution {
             index += 1;
 
             let index_inc = if op_type == 0 { 15 } else { 11 };
-            let op_len = bits.bits_take(index, index_inc);
+            let op_len = bits.value(index, index_inc);
             index += index_inc;
 
-            if op_type == 0 {
-                let bits = bits
-                    .to_vec()
-                    .iter()
-                    .skip(index)
-                    .take(op_len)
-                    .copied()
-                    .collect::<Vec<u8>>();
-
-                let result = self.read_packets(&bits, usize::MAX);
-
-                index += result.0;
-                packets.push(Packet::Op(version, typ, result.1))
+            let (bits_range, packets_to_read) = if op_type == 0 {
+                (&bits[index..index + op_len], usize::MAX)
             } else {
-                let bits = bits
-                    .to_vec()
-                    .iter()
-                    .skip(index)
-                    .copied()
-                    .collect::<Vec<u8>>();
+                (&bits[index..], op_len)
+            };
 
-                let result = self.read_packets(&bits, op_len);
-
-                index += result.0;
-                packets.push(Packet::Op(version, typ, result.1))
-            }
+            let (skip, sub_packets) = self.read_packets(bits_range, packets_to_read);
+            index += skip;
+            packets.push(Packet::Op(version, typ, sub_packets))
         }
 
         (index, packets)
@@ -163,6 +140,12 @@ mod tests {
             .unwrap();
 
         assert_eq!("16", result.to_string());
+
+        let result = DaySolution::default()
+            .part_1(Some(include_str!("../../inputs/day16.txt").to_string()))
+            .unwrap();
+
+        assert_eq!("951", result.to_string());
     }
 
     #[test]
@@ -172,5 +155,11 @@ mod tests {
             .unwrap();
 
         assert_eq!("3", result.to_string());
+
+        let result = DaySolution::default()
+            .part_2(Some(include_str!("../../inputs/day16.txt").to_string()))
+            .unwrap();
+
+        assert_eq!("902198718880", result.to_string());
     }
 }
