@@ -62,11 +62,10 @@ impl Parser {
     }
 
     fn packet_op1(input: &str) -> IResult<&str, Packet> {
-        let (input, (version, r#type, _, len)) = tuple((
+        let (input, (version, r#type, len)) = tuple((
             Self::header_item,
             Self::header_item,
-            tag("0"),
-            map_res(take(15usize), Self::from_bin),
+            preceded(tag("0"), map_res(take(15usize), Self::from_bin)),
         ))(input)?;
         let (input, s) = take(len)(input)?;
         let (_, packets) = many1(Self::packet)(s)?;
@@ -75,11 +74,10 @@ impl Parser {
     }
 
     fn packet_op2(input: &str) -> IResult<&str, Packet> {
-        let (input, (version, r#type, _, len)) = tuple((
+        let (input, (version, r#type, len)) = tuple((
             Self::header_item,
             Self::header_item,
-            tag("1"),
-            map_res(take(11usize), Self::from_bin),
+            preceded(tag("1"), map_res(take(11usize), Self::from_bin)),
         ))(input)?;
         let (input, packets) = count(Self::packet, len as usize)(input)?;
 
