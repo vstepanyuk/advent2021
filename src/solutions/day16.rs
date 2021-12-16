@@ -2,6 +2,7 @@ use crate::solutions::{Result, Solution};
 use nom::branch::alt;
 use nom::bytes::complete::take;
 use nom::multi::{count, many0, many1};
+use nom::sequence::preceded;
 use nom::{bytes::complete::tag, combinator::map_res, sequence::tuple, IResult};
 use std::fmt::Display;
 
@@ -32,10 +33,7 @@ impl Parser {
     }
 
     fn literal_group(prefix: &str) -> impl Fn(&str) -> IResult<&str, usize> + '_ {
-        move |input| {
-            let (input, _) = tag(prefix)(input)?;
-            map_res(take(4usize), Self::from_bin)(input)
-        }
+        move |input| preceded(tag(prefix), map_res(take(4usize), Self::from_bin))(input)
     }
 
     fn literal_groups(input: &str) -> IResult<&str, usize> {
