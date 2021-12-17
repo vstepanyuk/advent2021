@@ -1,38 +1,26 @@
+use std::fmt::Display;
+
+use pathfinding::prelude::dijkstra;
+
 use crate::matrix::Matrix;
 use crate::solutions::{Result, Solution};
-use std::cmp::Reverse;
-use std::collections::{BinaryHeap, HashSet};
-use std::fmt::Display;
 
 #[derive(Default)]
 pub struct DaySolution;
 
 impl DaySolution {
     fn solve(&self, matrix: &Matrix<usize>) -> Option<usize> {
-        let mut queue = BinaryHeap::new();
-        let mut visited = HashSet::new();
-
-        queue.push((Reverse(0), (0, 0)));
-        while let Some((Reverse(risk), pos)) = queue.pop() {
-            if visited.contains(&pos) {
-                continue;
-            }
-            visited.insert(pos);
-
-            if pos == (matrix.width as i32 - 1, matrix.height as i32 - 1) {
-                return Some(risk);
-            }
-
-            queue.extend(
+        let result = dijkstra(
+            &(0, 0),
+            |&(x, y)| {
                 matrix
-                    .neighbours4_iter(pos.0, pos.1)
-                    .filter_map(|(value, pos)| {
-                        (!visited.contains(&pos)).then(|| (Reverse(value + risk), pos))
-                    }),
-            );
-        }
+                    .neighbours4_iter(x, y)
+                    .map(|(&risk, pos)| (pos, risk))
+            },
+            |pos| *pos == (matrix.width as i32 - 1, matrix.height as i32 - 1),
+        );
 
-        None
+        result.map(|(_, risk)| risk)
     }
 }
 
