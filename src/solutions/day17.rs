@@ -65,7 +65,7 @@ impl Solution for DaySolution {
         let (y_min, y_max) = (y_min.parse::<i32>().unwrap(), y_max.parse::<i32>().unwrap());
 
         let mut mm = i32::MIN;
-        for i in 1..x_max {
+        for i in 0..=x_max {
             for j in y_min..x_max {
                 if let Some(y) = self.hit((i, j), x_min, x_max, y_min, y_max) {
                     if y > mm {
