@@ -10,7 +10,7 @@ use crate::solutions::{Result, Solution};
 #[derive(Default)]
 pub struct DaySolution;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug)]
 enum Item {
     Open,
     Close,
