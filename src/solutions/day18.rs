@@ -4,8 +4,9 @@ use nom::bytes::streaming::take_while1;
 use nom::character::complete::char;
 use nom::sequence::{preceded, separated_pair, terminated};
 use nom::{combinator::map_res, IResult};
+use std::collections::VecDeque;
 use std::fmt::Display;
-use trees::{Node, Tree};
+use trees::{Node, Tree, TreeWalk};
 
 #[derive(Debug, PartialEq, Eq)]
 enum SnailFish {
@@ -16,41 +17,51 @@ enum SnailFish {
 }
 
 impl SnailFish {
-    fn tree(&self) -> Tree<i32> {
-        let mut tree = Tree::new(0);
+    fn tree(&self) -> Tree<(i32, usize)> {
+        self._tree(0)
+    }
+
+    fn _tree(&self, depth: usize) -> Tree<(i32, usize)> {
+        let mut tree = Tree::new((-1, depth));
 
         match self {
             SnailFish::Pair1(a, b) => {
-                tree.root_mut().push_back(Tree::new(*a));
-                tree.root_mut().push_back(Tree::new(*b));
+                tree.root_mut().push_back(Tree::new((*a, depth)));
+                tree.root_mut().push_back(Tree::new((*b, depth)));
             }
             SnailFish::Pair2(a, b) => {
-                tree.root_mut().push_back(Tree::new(*a));
-                tree.root_mut().push_back(b.tree());
+                tree.root_mut().push_back(Tree::new((*a, depth)));
+                tree.root_mut().push_back(b._tree(depth + 1));
             }
             SnailFish::Pair3(a, b) => {
-                tree.root_mut().push_back(a.tree());
-                tree.root_mut().push_back(Tree::new(*b));
+                tree.root_mut().push_back(a._tree(depth + 1));
+                tree.root_mut().push_back(Tree::new((*b, depth)));
             }
             SnailFish::Pair4(a, b) => {
-                tree.root_mut().push_back(a.tree());
-                tree.root_mut().push_back(b.tree());
+                tree.root_mut().push_back(a._tree(depth + 1));
+                tree.root_mut().push_back(b._tree(depth + 1));
             }
         }
 
         tree
-
-        // root.append()
-        // match self {
-        //     SnailFish::Pair1(a, b) => {
-        //     }
-        //     SnailFish::Pair2(_, _) => {}
-        //     SnailFish::Pair3(_, _) => {}
-        //     SnailFish::Pair4(_, _) => {}
-        // }
     }
 
-    fn reduce(&self, level: usize) -> SnailFish {
+    // fn add_to_leftmost(self, value: i32) -> Self {
+    //     match self {
+    //         Self::Value(n) => Self::Value(n + value),
+    //         Self::Pair2(l, r) => Self::Pair2(Box::new(l.add_to_leftmost(val)), r),
+    //     }
+    // }
+    //
+    // fn add_to_rightmost(self, val: u64) -> Self {
+    //     match self {
+    //         Self::Regular(n) => Number::Regular(n + val),
+    //         Number::Pair(l, r) => Number::Pair(l, Box::new(r.add_to_rightmost(val))),
+    //     }
+    // }
+
+    fn reduce(&self, level: usize) -> Self {
+        println!("{:?} {:?}", level, self);
         match self {
             Self::Pair1(a, b) => SnailFish::Pair1(*a, *b),
             Self::Pair2(a, b) if level >= 4 => {
@@ -75,33 +86,50 @@ impl SnailFish {
         }
     }
 
-    fn debug(&self) {
-        self.print(0);
+    fn explode(&self) {
+        let mut tree = self.tree();
+        let mut walk = TreeWalk::from(tree);
+
+        while let Some(visit) = walk.get() {
+            let node = visit.node();
+            let (data, depth) = *node.data();
+
+            if data == -1 && depth == 4 {
+                let left = *walk.get().unwrap().node().data();
+                walk.forward();
+                let right = *walk.get().unwrap().node().data();
+                walk.forward();
+
+                // println!("LEFT: {:?}, RIGHT: {:?}", *left, *right);
+                break;
+            }
+            // visit.node()
+            println!("{} {:?} ({})", " ".repeat(depth), data, depth);
+
+            walk.forward();
+        }
+
+        // self._explode(&mut tree, 0);
     }
 
-    fn print(&self, level: usize) {
+    fn _explode(&self, root: &mut Tree<i32>, level: usize) {
+        let mut iter = root.iter();
+        let left = iter.next();
+        let right = iter.next();
+    }
+
+    fn to_string(&self) -> String {
         match self {
-            SnailFish::Pair1(a, b) => print!("[{},{}]", a, b),
-            SnailFish::Pair2(a, b) => {
-                print!("[{},", a);
-                b.print(level + 1);
-                print!("]");
-            }
-            SnailFish::Pair3(a, b) => {
-                print!("[");
-                a.print(level + 1);
-                print!(",{}]", b);
-            }
-            SnailFish::Pair4(a, b) => {
-                print!("[");
-                a.print(level + 1);
-                print!(",");
-                b.print(level + 1);
-                print!("]");
-            }
+            SnailFish::Pair1(a, b) => format!("[{},{}]", a, b),
+            SnailFish::Pair2(a, b) => format!("[{},{}]", a, b.to_string()),
+            SnailFish::Pair3(a, b) => format!("[{},{}]", a.to_string(), b),
+            SnailFish::Pair4(a, b) => format!("[{},{}]", a.to_string(), b.to_string()),
         }
-        if level == 0 {
-            println!();
+    }
+
+    fn reduce_tree(&self, tree: &Tree<i32>) {
+        for node in tree.iter() {
+            println!("{:?} {:?}", node.data(), node.node_count());
         }
     }
 }
@@ -109,6 +137,16 @@ impl SnailFish {
 impl Default for SnailFish {
     fn default() -> Self {
         unimplemented!()
+    }
+}
+
+trait ToSnailfish {
+    fn to_snailfish(&self) -> SnailFish;
+}
+
+impl ToSnailfish for str {
+    fn to_snailfish(&self) -> SnailFish {
+        Parser::parse(&self).unwrap()
     }
 }
 
@@ -184,32 +222,27 @@ impl Parser {
 
 impl Solution for DaySolution {
     fn part_1(&mut self, _input: Option<String>) -> Result<Box<dyn Display>> {
-        // println!("{:?}", Parser::parse("[1,2]"));
-        // println!("{:?}", Parser::parse("[[1,2],3]"));
-        // println!("{:?}", Parser::parse("[9,[8,7]]"));
-        // println!("{:?}", Parser::parse("[[1,9],[8,5]]"));
-        // println!("{:?}", Parser::parse("[[[[1,2],[3,4]],[[5,6],[7,8]]],9]"));
-        // println!(
-        //     "{:?}",
-        //     Parser::parse("[[[9,[3,8]],[[0,9],6]],[[[3,7],[4,9]],3]]")
-        // );
-
-        println!("{:?}", Parser::parse("[1,2]").unwrap().tree().to_string());
+        // let f = Parser::parse("[7,[6,[5,[4,[3,2]]]]]").unwrap();
+        // f.debug();
+        // f.reduce(1).debug();
 
         let f = Parser::parse("[[[[[9,8],1],2],3],4]").unwrap();
-        // [[[[0,9],2],3],4]
-        // f.debug();
-        // f.reduce(1).debug();
+        // println!("{:?}", f.reduce(1).to_string());
+        f.explode();
 
-        println!("{:?}", f.tree().to_string());
+        // let f = Parser::parse("[7,[6,[5,[4,[3,2]]]]]").unwrap();
+        // println!("{:?}", f.reduce(1).to_string());
+        //
+        // let f = Parser::parse("[[6,[5,[4,[3,2]]]],1]").unwrap();
+        // println!("{:?}", f.reduce(1).to_string());
 
-        let f = Parser::parse("[7,[6,[5,[4,[3,2]]]]]").unwrap();
-        // f.debug();
-        // f.reduce(1).debug();
-
-        let f = Parser::parse("[[6,[5,[4,[3,2]]]],1]").unwrap();
-        // f.debug();
-        // f.reduce(1).debug();
+        // let f = Parser::parse("[[6,[5,[4,[3,2]]]],1]").unwrap();
+        // f.explode();
+        // // println!("{:?}", f);
+        // let tree = f.tree();
+        // println!("{:?}", tree.to_string());
+        //
+        // f.reduce_tree(&tree);
 
         Ok(Box::new(1))
     }
