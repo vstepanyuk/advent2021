@@ -1,15 +1,11 @@
+use std::fmt::{Debug, Display};
+
+use itertools::{iproduct, Itertools};
+use json::JsonValue;
+
 use crate::day18::Item::{Close, Comma, Value};
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
-use itertools::{iproduct, Itertools};
-use json::JsonValue;
-use nom::branch::alt;
-use nom::bytes::complete::tag;
-use nom::character::complete::digit1;
-use nom::combinator::map;
-use nom::multi::many1;
-use nom::{combinator::map_res, IResult};
-use std::fmt::{Debug, Display};
 
 #[derive(Default)]
 pub struct DaySolution;
@@ -31,32 +27,6 @@ impl Item {
     }
 }
 
-fn parse_usize(input: &str) -> std::result::Result<usize, std::num::ParseIntError> {
-    input.parse::<usize>()
-}
-
-impl Item {
-    fn comma(input: &str) -> IResult<&str, Item> {
-        map(tag(","), |_| Self::Comma)(input)
-    }
-
-    fn open(input: &str) -> IResult<&str, Item> {
-        map(tag("["), |_| Self::Open)(input)
-    }
-
-    fn close(input: &str) -> IResult<&str, Item> {
-        map(tag("]"), |_| Self::Close)(input)
-    }
-
-    fn value(input: &str) -> IResult<&str, Item> {
-        map(map_res(digit1, parse_usize), Self::Value)(input)
-    }
-
-    fn any(input: &str) -> IResult<&str, Item> {
-        alt((Self::open, Self::close, Self::comma, Self::value))(input)
-    }
-}
-
 trait Snailfish {
     fn from_string(input: &str) -> Vec<Item>;
     fn to_string(&self) -> String;
@@ -69,7 +39,15 @@ trait Snailfish {
 
 impl Snailfish for Vec<Item> {
     fn from_string(input: &str) -> Vec<Item> {
-        many1(Item::any)(input).unwrap_or_default().1
+        input
+            .chars()
+            .map(|ch| match ch {
+                '[' => Item::Open,
+                ']' => Item::Close,
+                ',' => Item::Comma,
+                x => Item::Value(x.to_digit(10).unwrap_or(0) as usize),
+            })
+            .collect()
     }
 
     fn to_string(&self) -> String {
@@ -81,6 +59,13 @@ impl Snailfish for Vec<Item> {
                 Item::Value(value) => format!("{}", value),
             })
             .join("")
+    }
+
+    fn add(&mut self, other: Vec<Item>) {
+        self.insert(0, Item::Open);
+        self.push(Item::Comma);
+        self.extend(other);
+        self.push(Item::Close)
     }
 
     fn explode(&mut self) -> bool {
@@ -160,13 +145,6 @@ impl Snailfish for Vec<Item> {
         }
 
         false
-    }
-
-    fn add(&mut self, other: Vec<Item>) {
-        self.insert(0, Item::Open);
-        self.push(Item::Comma);
-        self.extend(other);
-        self.push(Item::Close)
     }
 
     fn reduce(&mut self) {
