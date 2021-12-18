@@ -56,7 +56,7 @@ impl Snailfish for Vec<Item> {
                 Item::Open => "[".to_string(),
                 Item::Close => "]".to_string(),
                 Item::Comma => ",".to_string(),
-                Item::Value(value) => format!("{}", value),
+                Item::Value(value) => value.to_string(),
             })
             .join("")
     }
@@ -69,27 +69,25 @@ impl Snailfish for Vec<Item> {
     }
 
     fn explode(&mut self) -> bool {
-        let mut open_count = 0;
-        let mut explode_position = None;
+        let explode_position = self
+            .iter()
+            .enumerate()
+            .scan(0, |sum, (index, item)| {
+                *sum += match item {
+                    Item::Open => 1,
+                    Item::Close => -1,
+                    _ => 0,
+                };
 
-        for (index, item) in self.iter().enumerate() {
-            open_count += match item {
-                Item::Open => 1,
-                Item::Close => -1,
-                _ => 0,
-            };
-
-            if open_count == 5 {
-                explode_position = Some(index);
-                break;
-            }
-        }
+                Some((*sum, index))
+            })
+            .find(|(sum, _)| *sum == 5);
 
         if explode_position.is_none() {
             return false;
         }
 
-        let explode_position = explode_position.unwrap();
+        let (_, explode_position) = explode_position.unwrap();
 
         let left = self[explode_position + 1].get_value();
         let right = self[explode_position + 3].get_value();
@@ -195,6 +193,8 @@ impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines::<String>(input);
         let mut current = Vec::<Item>::from_string(&lines[0]);
+
+        current.reduce();
 
         for line in lines.iter().skip(1) {
             current.add(Vec::from_string(line));
