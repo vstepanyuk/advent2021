@@ -171,7 +171,7 @@ function magnitude(s) {
 }
 
 const data = require("fs").readFileSync(
-  __dirname + "/../../inputs/day18.txt",
+  __dirname + "/../../inputs/day18_demo.txt",
   "utf-8"
 );
 

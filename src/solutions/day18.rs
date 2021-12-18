@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use itertools::{iproduct, Itertools};
+use itertools::Itertools;
 use json::JsonValue;
 
 use crate::day18::Item::{Close, Comma, Value};
@@ -212,12 +212,14 @@ impl Solution for DaySolution {
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let lines = parse_lines::<String>(input);
 
-        let max = iproduct!(lines.iter(), lines.iter().skip(1))
-            .map(|(a, b)| {
+        let max = lines
+            .iter()
+            .permutations(2)
+            .map(|pair| {
+                let (a, b) = (pair[0], pair[1]);
                 let mut a = Vec::from_string(a);
-                let b = Vec::from_string(b);
 
-                a.add(b);
+                a.add(Vec::from_string(b));
                 a.reduce();
 
                 let json = json::parse(&a.to_string()).unwrap();
@@ -230,28 +232,36 @@ impl Solution for DaySolution {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::day18::DaySolution;
-//     use crate::Solution;
-//
-//     #[test]
-//     fn part_1() {
-//         let input = include_str!("../../inputs/day18_demo.txt");
-//         let result = DaySolution::default()
-//             .part_1(Some(input.to_string()))
-//             .unwrap();
-//
-//         assert_eq!("", result.to_string())
-//     }
-//
-//     #[test]
-//     fn part_2() {
-//         let input = include_str!("../../inputs/day18_demo.txt");
-//         let result = DaySolution::default()
-//             .part_2(Some(input.to_string()))
-//             .unwrap();
-//
-//         assert_eq!("", result.to_string())
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use crate::day18::DaySolution;
+    use crate::Solution;
+
+    #[test]
+    fn part_1() {
+        let input = include_str!("../../inputs/day18_demo.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("4140", result.to_string());
+
+        let input = "[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]";
+
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("3488", result.to_string());
+    }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day18_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("3993", result.to_string());
+    }
+}
