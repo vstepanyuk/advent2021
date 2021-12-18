@@ -148,18 +148,15 @@ impl Snailfish for Vec<Item> {
     }
 
     fn reduce(&mut self) {
-        loop {
-            let mut same = true;
+        let mut same = false;
+        while !same {
+            same = true;
             while self.explode() {
                 same = false;
             }
 
             if self.split() {
                 same = false;
-            }
-
-            if same {
-                break;
             }
         }
     }
