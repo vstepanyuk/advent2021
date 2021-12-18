@@ -1,3 +1,4 @@
+use crate::day18::Item::{Close, Comma, Value};
 use crate::helpers::parse_lines;
 use crate::solutions::{Result, Solution};
 use itertools::{iproduct, Itertools};
@@ -59,10 +60,11 @@ impl Item {
 trait Snailfish {
     fn from_string(input: &str) -> Vec<Item>;
     fn to_string(&self) -> String;
-    fn explode(&self) -> Vec<Item>;
-    fn split(&self) -> Vec<Item>;
-    fn add(&self, other: Vec<Item>) -> Vec<Item>;
-    fn reduce(&self) -> Vec<Item>;
+    fn add(&mut self, other: Vec<Item>);
+
+    fn explode(&mut self) -> bool;
+    fn split(&mut self) -> bool;
+    fn reduce(&mut self);
 }
 
 impl Snailfish for Vec<Item> {
@@ -81,7 +83,7 @@ impl Snailfish for Vec<Item> {
             .join("")
     }
 
-    fn explode(&self) -> Vec<Item> {
+    fn explode(&mut self) -> bool {
         let mut open_count = 0;
         let mut explode_position = None;
 
@@ -99,7 +101,7 @@ impl Snailfish for Vec<Item> {
         }
 
         if explode_position.is_none() {
-            return self.to_vec();
+            return false;
         }
 
         let explode_position = explode_position.unwrap();
@@ -107,18 +109,18 @@ impl Snailfish for Vec<Item> {
         let left = self[explode_position + 1].get_value();
         let right = self[explode_position + 3].get_value();
 
-        let mut result = vec![Item::Value(0)];
-        let mut added = false;
+        self[explode_position] = Item::Value(0);
+
+        for _ in 0..4 {
+            self.remove(explode_position + 1);
+        }
 
         let mut index = explode_position - 1;
         loop {
-            match self[index] {
-                Item::Value(value) if !added => {
-                    result.insert(0, Item::Value(value + left));
-                    added = true;
-                }
-                _ => result.insert(0, self[index]),
-            };
+            if let Item::Value(value) = self[index] {
+                self[index] = Item::Value(value + left);
+                break;
+            }
 
             if index == 0 {
                 break;
@@ -126,80 +128,62 @@ impl Snailfish for Vec<Item> {
             index -= 1;
         }
 
-        index = explode_position + 5;
-        added = false;
+        index = explode_position + 1;
 
         while index < self.len() {
-            match self[index] {
-                Item::Value(value) if !added => {
-                    result.push(Item::Value(value + right));
-                    added = true;
-                }
-                _ => result.push(self[index]),
-            };
+            if let Item::Value(value) = self[index] {
+                self[index] = Item::Value(value + right);
+                break;
+            }
             index += 1;
         }
 
-        result
+        true
     }
 
-    fn split(&self) -> Vec<Item> {
-        let mut has_split = false;
+    fn split(&mut self) -> bool {
+        if let Some((index, item)) = self
+            .iter()
+            .find_position(|&item| matches!(item, Item::Value(v) if *v > 9))
+        {
+            let value = item.get_value();
+            let a = value / 2;
+            let b = value - a;
 
-        self.iter()
-            .flat_map(|item| match item {
-                Item::Value(value) if *value > 9 && !has_split => {
-                    has_split = true;
+            self[index] = Item::Open;
+            self.insert(index + 1, Value(a));
+            self.insert(index + 2, Comma);
+            self.insert(index + 3, Value(b));
+            self.insert(index + 4, Close);
 
-                    let a = value / 2;
-                    let b = value - a;
-
-                    vec![
-                        Item::Open,
-                        Item::Value(a),
-                        Item::Comma,
-                        Item::Value(b),
-                        Item::Close,
-                    ]
-                }
-                _ => vec![*item],
-            })
-            .collect()
-    }
-
-    fn add(&self, other: Vec<Item>) -> Vec<Item> {
-        let mut result = vec![Item::Open];
-        result.extend(self);
-        result.push(Item::Comma);
-        result.extend(other);
-        result.push(Item::Close);
-
-        result
-    }
-
-    fn reduce(&self) -> Vec<Item> {
-        let mut last = self.clone();
-        loop {
-            let mut last_explode = last.clone();
-            loop {
-                let tmp = last_explode.explode();
-                if tmp == last_explode {
-                    last = tmp;
-                    break;
-                }
-
-                last_explode = tmp;
-            }
-
-            last_explode = last_explode.split();
-            if last_explode == last {
-                break;
-            }
-
-            last = last_explode
+            return true;
         }
 
-        last
+        false
+    }
+
+    fn add(&mut self, other: Vec<Item>) {
+        self.insert(0, Item::Open);
+        self.push(Item::Comma);
+        self.extend(other);
+        self.push(Item::Close)
+    }
+
+    fn reduce(&mut self) {
+        loop {
+            let mut same = true;
+            while self.explode() {
+                same = false;
+            }
+
+            if self.split() {
+                same = false;
+            }
+
+            if same {
+                break;
+            }
+        }
     }
 }
 
@@ -238,8 +222,8 @@ impl Solution for DaySolution {
         let mut current = Vec::<Item>::from_string(&lines[0]);
 
         for line in lines.iter().skip(1) {
-            current = current.add(Vec::from_string(line));
-            current = current.reduce();
+            current.add(Vec::from_string(line));
+            current.reduce();
         }
 
         let value = json::parse(&current.to_string()).unwrap();
@@ -252,10 +236,13 @@ impl Solution for DaySolution {
 
         let max = iproduct!(lines.iter(), lines.iter().skip(1))
             .map(|(a, b)| {
-                let a = Vec::from_string(a);
+                let mut a = Vec::from_string(a);
                 let b = Vec::from_string(b);
 
-                let json = json::parse(&a.add(b).reduce().to_string()).unwrap();
+                a.add(b);
+                a.reduce();
+
+                let json = json::parse(&a.to_string()).unwrap();
                 self.magnitude(json) as usize
             })
             .max()
