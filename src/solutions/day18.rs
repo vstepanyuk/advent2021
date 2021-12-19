@@ -98,27 +98,18 @@ impl Snailfish for Vec<Item> {
             self.remove(explode_position + 1);
         }
 
-        let mut index = explode_position - 1;
-        loop {
+        for index in (0..explode_position - 1).rev() {
             if let Item::Value(value) = self[index] {
                 self[index] = Item::Value(value + left);
                 break;
             }
-
-            if index == 0 {
-                break;
-            }
-            index -= 1;
         }
 
-        index = explode_position + 1;
-
-        while index < self.len() {
-            if let Item::Value(value) = self[index] {
-                self[index] = Item::Value(value + right);
+        for item in self.iter_mut().skip(explode_position + 1) {
+            if let Item::Value(value) = item {
+                *value += right;
                 break;
             }
-            index += 1;
         }
 
         true
