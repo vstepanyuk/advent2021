@@ -14,7 +14,7 @@ impl DaySolution {
         let input = input.unwrap();
         let (enhancement, image_data) = input.split_once("\n\n").unwrap();
         let enhancement = enhancement.chars().collect::<Vec<char>>();
-        let image = Image::from(&image_data.replace("#", "1").replace(".", "0")).unwrap();
+        let image = Image::from(&image_data.replace('#', "1").replace('.', "0")).unwrap();
 
         let mut new_image = Image::new(image.width + steps * 2, image.height + steps * 2);
         image.iter().for_each(|(value, (x, y))| {
@@ -30,7 +30,6 @@ impl DaySolution {
                         (result << 1)
                             + match new_image.get(x as i32 + dx, y as i32 + dy) {
                                 Some(x) => *x as usize,
-                                None if step == 0 => 0,
                                 None if step == 0 || enhancement[0] == '.' => 0,
                                 None => step % 2,
                             }
