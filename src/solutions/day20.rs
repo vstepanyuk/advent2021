@@ -1,41 +1,84 @@
-use crate::solutions::{Result, Solution};
+use itertools::iproduct;
 use std::fmt::Display;
 
+use crate::matrix::Matrix;
+use crate::solutions::{Result, Solution};
+
+type Image = Matrix<u8>;
+
 #[derive(Default)]
-pub struct DaySolution;
+pub struct DaySolution {}
 
-impl Solution for DaySolution {
-    fn part_1(&mut self, _input: Option<String>) -> Result<Box<dyn Display>> {
-        todo!()
-    }
+impl DaySolution {
+    fn solve(&self, input: Option<String>, steps: usize) -> usize {
+        let input = input.unwrap();
+        let (enhancement, image_data) = input.split_once("\n\n").unwrap();
+        let enhancement = enhancement.chars().collect::<Vec<char>>();
+        let image = Image::from(&image_data.replace("#", "1").replace(".", "0")).unwrap();
 
-    fn part_2(&mut self, _input: Option<String>) -> Result<Box<dyn Display>> {
-        todo!()
+        let mut new_image = Image::new(image.width + steps * 2, image.height + steps * 2);
+        image.iter().for_each(|(value, (x, y))| {
+            new_image.set(x + steps, y + steps, *value);
+        });
+
+        for step in 0..steps {
+            let mut tmp = Image::new(new_image.width, new_image.height);
+
+            for y in 0..new_image.height {
+                for x in 0..new_image.width {
+                    let index = iproduct!(-1..=1, -1..=1).fold(0usize, |result, (dy, dx)| {
+                        (result << 1)
+                            + match new_image.get(x as i32 + dx, y as i32 + dy) {
+                                Some(x) => *x as usize,
+                                None if step == 0 => 0,
+                                None if step == 0 || enhancement[0] == '.' => 0,
+                                None => step % 2,
+                            }
+                    });
+
+                    tmp.set(x, y, (enhancement[index] == '#') as u8);
+                }
+            }
+
+            new_image = tmp;
+        }
+
+        new_image.iter().filter(|(&v, _)| v == 1).count()
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::day20::DaySolution;
-//     use crate::Solution;
-//
-//     #[test]
-//     fn part_1() {
-//         let input = include_str!("../../inputs/day20_demo.txt");
-//         let result = DaySolution::default()
-//             .part_1(Some(input.to_string()))
-//             .unwrap();
-//
-//         assert_eq!("", result.to_string())
-//     }
-//
-//     #[test]
-//     fn part_2() {
-//         let input = include_str!("../../inputs/day20_demo.txt");
-//         let result = DaySolution::default()
-//             .part_2(Some(input.to_string()))
-//             .unwrap();
-//
-//         assert_eq!("", result.to_string())
-//     }
-// }
+impl Solution for DaySolution {
+    fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
+        Ok(Box::new(self.solve(input, 2)))
+    }
+
+    fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
+        Ok(Box::new(self.solve(input, 50)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::day20::DaySolution;
+    use crate::Solution;
+
+    #[test]
+    fn part_1() {
+        let input = include_str!("../../inputs/day20_demo.txt");
+        let result = DaySolution::default()
+            .part_1(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("35", result.to_string());
+    }
+
+    #[test]
+    fn part_2() {
+        let input = include_str!("../../inputs/day20_demo.txt");
+        let result = DaySolution::default()
+            .part_2(Some(input.to_string()))
+            .unwrap();
+
+        assert_eq!("3351", result.to_string());
+    }
+}
