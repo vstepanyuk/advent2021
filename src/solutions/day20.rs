@@ -30,7 +30,7 @@ impl DaySolution {
                         (result << 1)
                             + match new_image.get(x as i32 + dx, y as i32 + dy) {
                                 Some(x) => *x as usize,
-                                None if step == 0 || enhancement[0] == '.' => 0,
+                                None if enhancement[0] == '.' => 0,
                                 None => step % 2,
                             }
                     });
