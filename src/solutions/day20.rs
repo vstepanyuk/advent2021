@@ -13,7 +13,7 @@ impl DaySolution {
     fn solve(&self, input: Option<String>, steps: usize) -> usize {
         let input = input.unwrap();
         let (enhancement, image_data) = input.split_once("\n\n").unwrap();
-        let enhancement = enhancement.chars().collect::<Vec<char>>();
+        let enhancement = enhancement.chars().collect::<Vec<_>>();
         let image = Image::from(&image_data.replace('#', "1").replace('.', "0")).unwrap();
 
         let mut new_image = Image::new(image.width + steps * 2, image.height + steps * 2);
@@ -22,10 +22,8 @@ impl DaySolution {
         });
 
         for step in 0..steps {
-            let mut tmp = Image::new(new_image.width, new_image.height);
-
-            for y in 0..new_image.height {
-                for x in 0..new_image.width {
+            new_image = Image::from_iter(
+                new_image.iter().map(|(_, (x, y))| {
                     let index = iproduct!(-1..=1, -1..=1).fold(0usize, |result, (dy, dx)| {
                         (result << 1)
                             + match new_image.get(x as i32 + dx, y as i32 + dy) {
@@ -35,11 +33,10 @@ impl DaySolution {
                             }
                     });
 
-                    tmp.set(x, y, (enhancement[index] == '#') as u8);
-                }
-            }
-
-            new_image = tmp;
+                    (enhancement[index] == '#').then(|| &1).unwrap_or(&0)
+                }),
+                new_image.width,
+            );
         }
 
         new_image.iter().filter(|(&v, _)| v == 1).count()
