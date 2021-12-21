@@ -66,7 +66,7 @@ fn dirac(score1: usize, score2: usize, pos1: usize, pos2: usize) -> (usize, usiz
 type Player = (usize, usize);
 
 fn play(dice: &mut Dice, playing: Player, waiting: Player) -> usize {
-    if playing.0 <= 1000 {
+    if playing.0 >= 1000 {
         return waiting.0 * dice.count;
     }
     let mut playing = playing;
