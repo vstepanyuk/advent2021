@@ -1,11 +1,26 @@
 use memoize::memoize;
-use std::cmp::{max, min};
+
+use std::cmp::max;
 use std::fmt::Display;
 
 use crate::solutions::{Result, Solution};
 
 #[derive(Default)]
 pub struct DaySolution;
+
+#[derive(Default)]
+struct Dice {
+    current: usize,
+    count: usize,
+}
+
+impl Dice {
+    fn next(&mut self) -> usize {
+        self.count += 1;
+        self.current = self.current % 100 + 1;
+        self.current
+    }
+}
 
 impl DaySolution {
     fn parse(&self, input: Option<String>) -> (usize, usize) {
@@ -48,55 +63,29 @@ fn dirac(score1: usize, score2: usize, pos1: usize, pos2: usize) -> (usize, usiz
     (new_score_1, new_score_2)
 }
 
+type Player = (usize, usize);
+
+fn play(dice: &mut Dice, playing: Player, waiting: Player) -> usize {
+    if playing.0 <= 1000 {
+        return waiting.0 * dice.count;
+    }
+    let mut playing = playing;
+
+    playing.1 = (playing.1 + dice.next() + dice.next() + dice.next() - 1) % 10 + 1;
+    playing.0 += playing.1;
+
+    play(dice, waiting, playing)
+}
+
 impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        let (mut player1, mut player2) = self.parse(input);
-        let mut score1 = 0;
-        let mut score2 = 0;
-        let mut rolled = 0;
-        let mut dice = 1;
+        let (player1, player2) = self.parse(input);
 
-        loop {
-            for _ in 0..3 {
-                player1 += dice;
-
-                while player1 > 10 {
-                    player1 -= 10;
-                }
-
-                dice += 1;
-                if dice > 100 {
-                    dice -= 100;
-                }
-            }
-            rolled += 3;
-
-            score1 += player1;
-            if score1 >= 1000 {
-                break;
-            }
-
-            for _ in 0..3 {
-                player2 += dice;
-
-                while player2 > 10 {
-                    player2 -= 10;
-                }
-
-                dice += 1;
-                if dice > 100 {
-                    dice -= 100;
-                }
-            }
-            rolled += 3;
-
-            score2 += player2;
-            if score2 >= 1000 {
-                break;
-            }
-        }
-
-        Ok(Box::new(min(score1, score2) * rolled))
+        Ok(Box::new(play(
+            &mut Dice::default(),
+            (0, player1),
+            (0, player2),
+        )))
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
