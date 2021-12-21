@@ -1,10 +1,6 @@
-use std::cmp::min;
-use std::collections::HashMap;
-use std::fmt::{Debug, Display};
-use std::ptr::hash;
-use std::str::FromStr;
-
-use itertools::iproduct;
+use memoize::memoize;
+use std::cmp::{max, min};
+use std::fmt::Display;
 
 use crate::solutions::{Result, Solution};
 
@@ -24,8 +20,32 @@ impl DaySolution {
             player2.parse().unwrap_or_default(),
         )
     }
+}
 
-    fn dirac_dice() {}
+#[memoize]
+fn dirac(score1: usize, score2: usize, pos1: usize, pos2: usize) -> (usize, usize) {
+    if score1 >= 21 {
+        return (1, 0);
+    }
+    if score2 >= 21 {
+        return (0, 1);
+    }
+
+    let mut new_score_1 = 0;
+    let mut new_score_2 = 0;
+
+    for u1 in 1..=3 {
+        for u2 in 1..=3 {
+            for u3 in 1..=3 {
+                let pos1 = (u1 + u2 + u3 + pos1 - 1) % 10 + 1;
+                let result = dirac(score2, score1 + pos1, pos2, pos1);
+                new_score_1 += result.1;
+                new_score_2 += result.0;
+            }
+        }
+    }
+
+    (new_score_1, new_score_2)
 }
 
 impl Solution for DaySolution {
@@ -80,7 +100,10 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        Ok(Box::new(1))
+        let (player1, player2) = self.parse(input);
+        let result = dirac(0, 0, player1, player2);
+
+        Ok(Box::new(max(result.0, result.1)))
     }
 }
 
@@ -106,6 +129,6 @@ mod tests {
             .part_2(Some(input.to_string()))
             .unwrap();
 
-        assert_eq!("", result.to_string());
+        assert_eq!("444356092776315", result.to_string());
     }
 }
