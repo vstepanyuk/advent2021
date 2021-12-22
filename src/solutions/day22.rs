@@ -1,6 +1,5 @@
 use crate::solutions::{Result, Solution};
 use euclid::{Box3D, Point3D};
-use itertools::Itertools;
 use std::cmp::{max, min};
 use std::collections::HashSet;
 use std::fmt::Display;
@@ -8,12 +7,59 @@ use std::fmt::Display;
 #[derive(Default)]
 pub struct DaySolution;
 
-type Cuboid = Box3D<isize, ()>;
-type Point = Point3D<isize, ()>;
+type CuboidBox = Box3D<isize, ()>;
+
+struct Cuboid {
+    r#box: CuboidBox,
+    empty: Vec<Cuboid>,
+}
+
+impl Cuboid {
+    fn intersection(&self, other: &Cuboid) -> Option<Self> {
+        // println!("CHECKING: {:?} {:?}", self.r#box, other.r#box);
+        if let Some(r#box) = self.r#box.intersection(&other.r#box) {
+            // println!("INTERSECTION {:?} / {}", r#box, self.count_box(&r#box));
+            Some(Cuboid {
+                r#box,
+                empty: vec![],
+            })
+        } else {
+            // println!("MAYBE INCLUDES");
+            if self.r#box.contains_box(&other.r#box) {
+                Some(Cuboid {
+                    r#box: Box3D::new(other.r#box.min, other.r#box.max),
+                    empty: vec![],
+                })
+            } else {
+                None
+            }
+        }
+    }
+
+    fn subtract(&mut self, other: &Cuboid) {
+        if let Some(cuboid) = self.intersection(other) {
+            self.empty.iter_mut().for_each(|empty| {
+                empty.subtract(&cuboid);
+            });
+            self.empty.push(cuboid);
+        }
+    }
+
+    fn count(&self) -> isize {
+        let count = self.count_box(&self.r#box);
+        count - self.empty.iter().map(Cuboid::count).sum::<isize>()
+    }
+
+    fn count_box(&self, r#box: &CuboidBox) -> isize {
+        (r#box.max.x - r#box.min.x + 1)
+            * (r#box.max.y - r#box.min.y + 1)
+            * (r#box.max.z - r#box.min.z + 1)
+    }
+}
 
 #[derive(Debug)]
 struct Rule {
-    cuboid: Box3D<isize, ()>,
+    cuboid: CuboidBox,
     status: bool,
 }
 
@@ -40,7 +86,7 @@ impl DaySolution {
                 })
                 .collect::<Vec<_>>();
 
-            let cuboid = Cuboid::new(
+            let cuboid = CuboidBox::new(
                 Point3D::new(result[0].0, result[1].0, result[2].0),
                 Point3D::new(result[0].1, result[1].1, result[2].1),
             );
@@ -51,13 +97,13 @@ impl DaySolution {
         rules
     }
 
-    fn generate(&self, cuboid: &Cuboid) -> Vec<Cuboid> {
+    fn generate(&self, cuboid: &CuboidBox) -> Vec<CuboidBox> {
         let mut result = vec![];
 
         for x in cuboid.min.x..=cuboid.max.x {
             for y in cuboid.min.y..=cuboid.max.y {
                 for z in cuboid.min.z..=cuboid.max.z {
-                    result.push(Cuboid::new(
+                    result.push(CuboidBox::new(
                         Point3D::new(x, y, z),
                         Point3D::new(x + 1, y + 1, z + 1),
                     ))
@@ -68,13 +114,7 @@ impl DaySolution {
         result
     }
 
-    fn count(&self, cuboid: &Cuboid) -> usize {
-        return (cuboid.max.x - cuboid.min.x + 1).abs() as usize
-            * (cuboid.max.y - cuboid.min.y + 1).abs() as usize
-            * (cuboid.max.z - cuboid.min.z + 1).abs() as usize;
-    }
-
-    fn resize(&self, cuboid: &Cuboid) -> Cuboid {
+    fn resize(&self, cuboid: &CuboidBox) -> CuboidBox {
         let min_x = max(cuboid.min.x, -50);
         let min_y = max(cuboid.min.y, -50);
         let min_z = max(cuboid.min.z, -50);
@@ -82,7 +122,7 @@ impl DaySolution {
         let max_y = min(cuboid.max.y, 50);
         let max_z = min(cuboid.max.z, 50);
 
-        Cuboid::new(
+        CuboidBox::new(
             Point3D::new(min_x, min_y, min_z),
             Point3D::new(max_x, max_y, max_z),
         )
@@ -109,7 +149,26 @@ impl Solution for DaySolution {
     }
 
     fn part_2(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
-        Ok(Box::new(1))
+        let rules = self.parse(input);
+
+        let mut cuboids: Vec<Cuboid> = vec![];
+
+        for rule in rules {
+            let cuboid = Cuboid {
+                r#box: rule.cuboid,
+                empty: vec![],
+            };
+
+            for c in cuboids.iter_mut() {
+                c.subtract(&cuboid);
+            }
+
+            if rule.status {
+                cuboids.push(cuboid);
+            }
+        }
+
+        Ok(Box::new(cuboids.iter().map(Cuboid::count).sum::<isize>()))
     }
 }
 
