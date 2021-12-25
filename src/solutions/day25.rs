@@ -8,72 +8,59 @@ pub struct DaySolution;
 
 type Sea = Matrix<char>;
 
+impl DaySolution {
+    fn r#move(&self, sea: &mut Sea, cucumber: char) -> bool {
+        let next = if cucumber == '>' {
+            (1, 0, 0, 1)
+        } else {
+            (0, 1, 1, 0)
+        };
+
+        let mut moved = HashSet::new();
+        sea.iter()
+            .filter(|(&c, _)| c == cucumber)
+            .map(|(_, pos)| pos)
+            .collect::<Vec<_>>()
+            .iter()
+            .fold(false, |result, (x, y)| {
+                let x = *x as i32;
+                let y = *y as i32;
+
+                let new_pos = match (
+                    sea.get(x + next.0, y + next.1),
+                    sea.get(x * next.2, y * next.3),
+                ) {
+                    (Some('.'), _) if !moved.contains(&(x + next.0, y + next.1)) => {
+                        Some((x + next.0, y + next.1))
+                    }
+                    (None, Some('.')) if !moved.contains(&(x * next.2, y * next.3)) => {
+                        Some((x * next.2, y * next.3))
+                    }
+                    _ => None,
+                };
+
+                if let Some((new_x, new_y)) = new_pos {
+                    sea.set(x, y, '.');
+                    sea.set(new_x, new_y, cucumber);
+                    moved.insert((x, y));
+                    return true;
+                }
+
+                result
+            })
+    }
+}
+
 impl Solution for DaySolution {
     fn part_1(&mut self, input: Option<String>) -> Result<Box<dyn Display>> {
         let mut sea = Sea::from(&input.unwrap()).unwrap();
-        let mut count = 0;
 
-        loop {
-            let mut moves = 0;
-
-            // Move >
-            let mut moved = HashSet::new();
-            sea.iter()
-                .filter(|(&c, _)| c == '>')
-                .map(|(_, pos)| pos)
-                .collect::<Vec<_>>()
-                .iter()
-                .for_each(|(x, y)| {
-                    let x = *x as i32;
-                    let y = *y as i32;
-
-                    let new_x = match (sea.get(x + 1, y), sea.get(0, y)) {
-                        (Some('.'), _) if !moved.contains(&(x + 1, y)) => Some(x + 1),
-                        (None, Some('.')) if !moved.contains(&(0, y)) => Some(0),
-                        _ => None,
-                    };
-
-                    if let Some(new_x) = new_x {
-                        sea.set(x, y, '.');
-                        sea.set(new_x, y, '>');
-                        moved.insert((x, y));
-                        moves += 1;
-                    }
-                });
-
-            // Move v
-            let mut moved = HashSet::new();
-            sea.iter()
-                .filter(|(&c, _)| c == 'v')
-                .map(|(_, pos)| pos)
-                .collect::<Vec<_>>()
-                .iter()
-                .for_each(|(x, y)| {
-                    let x = *x as i32;
-                    let y = *y as i32;
-
-                    let new_y = match (sea.get(x, y + 1), sea.get(x, 0)) {
-                        (Some('.'), _) if !moved.contains(&(x, y + 1)) => Some(y + 1),
-                        (None, Some('.')) if !moved.contains(&(x, 0)) => Some(0),
-                        _ => None,
-                    };
-
-                    if let Some(new_y) = new_y {
-                        sea.set(x, y, '.');
-                        sea.set(x, new_y, 'v');
-                        moved.insert((x, y));
-                        moves += 1;
-                    }
-                });
-
-            if moves == 0 {
-                break;
-            }
-
-            count += 1;
-        }
-
-        Ok(Box::new(count + 1))
+        Ok(Box::new(
+            std::iter::repeat(1)
+                .take_while(|_| self.r#move(&mut sea, '>') | self.r#move(&mut sea, 'v'))
+                .count()
+                + 1,
+        ))
     }
 
     fn part_2(&mut self, _input: Option<String>) -> Result<Box<dyn Display>> {
