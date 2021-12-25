@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
 pub struct Matrix<T> {
@@ -66,6 +66,22 @@ impl<T: Debug + Default> Debug for Matrix<T> {
             for x in 0..self.width {
                 match self.get(x, y) {
                     Some(x) => write!(f, "{:?}", x)?,
+                    None => write!(f, " ")?,
+                };
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<T: Display + Default> Display for Matrix<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                match self.get(x, y) {
+                    Some(x) => write!(f, "{}", x)?,
                     None => write!(f, " ")?,
                 };
             }
