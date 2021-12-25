@@ -103,10 +103,7 @@ impl DaySolution {
         for x in cuboid.min.x..=cuboid.max.x {
             for y in cuboid.min.y..=cuboid.max.y {
                 for z in cuboid.min.z..=cuboid.max.z {
-                    result.push(CuboidBox::new(
-                        Point3D::new(x, y, z),
-                        Point3D::new(x + 1, y + 1, z + 1),
-                    ))
+                    result.push(CuboidBox::new(Point3D::new(x, y, z), Point3D::new(x, y, z)))
                 }
             }
         }
