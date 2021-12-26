@@ -29,7 +29,7 @@ impl DaySolution {
             .replace("Player 1 starting position: ", "")
             .replace("Player 2 starting position: ", "");
 
-        let (player1, player2) = input.split_once("\n").unwrap();
+        let (player1, player2) = input.split_once('\n').unwrap();
         (
             player1.parse().unwrap_or_default(),
             player2.parse().unwrap_or_default(),

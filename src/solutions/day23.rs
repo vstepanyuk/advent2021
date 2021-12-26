@@ -143,7 +143,9 @@ impl DaySolution {
 
         if let Some((path, cost)) = result {
             if animate {
-                println!();
+                for _ in 0..100 {
+                    println!();
+                }
                 for state in path {
                     print!("\x1B[2J");
                     println!("{}", self.draw(&state));

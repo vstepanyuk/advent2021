@@ -16,23 +16,18 @@ struct Cuboid {
 
 impl Cuboid {
     fn intersection(&self, other: &Cuboid) -> Option<Self> {
-        // println!("CHECKING: {:?} {:?}", self.r#box, other.r#box);
         if let Some(r#box) = self.r#box.intersection(&other.r#box) {
-            // println!("INTERSECTION {:?} / {}", r#box, self.count_box(&r#box));
             Some(Cuboid {
                 r#box,
                 empty: vec![],
             })
+        } else if self.r#box.contains_box(&other.r#box) {
+            Some(Cuboid {
+                r#box: Box3D::new(other.r#box.min, other.r#box.max),
+                empty: vec![],
+            })
         } else {
-            // println!("MAYBE INCLUDES");
-            if self.r#box.contains_box(&other.r#box) {
-                Some(Cuboid {
-                    r#box: Box3D::new(other.r#box.min, other.r#box.max),
-                    empty: vec![],
-                })
-            } else {
-                None
-            }
+            None
         }
     }
 
@@ -82,7 +77,7 @@ impl DaySolution {
                     let mn = mn.parse::<isize>().unwrap();
                     let mx = mx.parse::<isize>().unwrap();
 
-                    return (mn, mx);
+                    (mn, mx)
                 })
                 .collect::<Vec<_>>();
 
